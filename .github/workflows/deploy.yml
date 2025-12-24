@@ -31,6 +31,9 @@ jobs:
           cp ./target/wasm32-unknown-unknown/release/my-game.wasm ./deploy/game/
           cp index.game.html ./deploy/game/index.html
           cp index.html ./deploy/
+          ls 
+          cd deploy
+          ls
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3

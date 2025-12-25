@@ -32,7 +32,7 @@ jobs:
           for wasm in target/wasm32-unknown-unknown/release/*.wasm; do
             echo "------"
             name=$(basename "$wasm" .wasm)
-            echo &name
+            echo "$name"
             mkdir -p deploy/games/$name
             cp "$wasm" ./deploy/games/$name/
             cp web/template.txt ./deploy/games/$name/index.html

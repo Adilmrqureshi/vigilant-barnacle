@@ -35,13 +35,7 @@ jobs:
             mkdir -p deploy/games/$name
             cp "$wasm" ./deploy/games/$name/
             cp web/template.txt ./deploy/games/$name/index.html
-            cat >> deploy/games/$name/index.html <<EOF
-              <script>
-                  load("$name.wasm");
-              </script>
-              </body>
-              </html>
-            EOF
+            echo "<script>load(\"$name.wasm\");</script></body></html>" >> ./deploy/games/$name/index.html
           done
 
       - name: Deploy

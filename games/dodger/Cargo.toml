@@ -5,4 +5,4 @@ edition = "2024"
 
 [dependencies]
 macroquad = "0.4"
-shared = { path = "../../shared"}
+shared = { path = "../../shared" }

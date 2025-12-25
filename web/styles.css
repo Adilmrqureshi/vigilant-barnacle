@@ -46,6 +46,10 @@ section {
   gap: 64px;
 }
 
+.jumper {
+  background-image: url("./assets/yellow-jumper.png");
+}
+
 @media(min-width: 700px) {
   .tile {
     width: 300px;

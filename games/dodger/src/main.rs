@@ -39,7 +39,7 @@ async fn main() {
         speed: MOVEMENT_SPEED,
         x: screen_width() / 2.0,
         y: screen_height() / 2.0,
-        hit: false
+        hit: false,
     };
 
     loop {
@@ -65,8 +65,8 @@ async fn main() {
                     y: circle.y,
                     speed: circle.speed * 2.0,
                     size: 5.0,
-                    hit: false
-                } )
+                    hit: false,
+                })
             }
             circle.x = clamp(circle.x, circle.size / 2.0, screen_boundary_x);
             circle.y = clamp(circle.y, circle.size / 2.0, screen_boundary_y);
@@ -116,12 +116,7 @@ async fn main() {
             );
         }
         for bullet in &bullets {
-            draw_circle(
-                bullet.x,
-                bullet.y,
-                bullet.size,
-                BLUE
-            )
+            draw_circle(bullet.x, bullet.y, bullet.size, BLUE)
         }
         draw_circle(circle.x, circle.y, circle.size / 2.0, YELLOW);
 

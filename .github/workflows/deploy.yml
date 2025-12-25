@@ -28,8 +28,7 @@ jobs:
       - name: Prepare Deployment Directory
         run: |
           mkdir -p ./deploy
-          cp -r web/ ./deploy/
-          
+          cp -a ./web/. ./deploy/
           for wasm in target/wasm32-unknown-unknown/release/*.wasm; do
             echo "------"
             name=$(basename "$wasm" .wasm)
@@ -40,8 +39,6 @@ jobs:
           done
           ls ./deploy
           echo "--------"
-          cd deploy
-          ls
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3

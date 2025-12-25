@@ -91,7 +91,7 @@ async fn main() {
         clear_background(DARKGREEN);
 
         if !gameover {
-            score = get_time() * 1000.0;
+            score += get_frame_time() * 1000.0;
             physics(&mut player, &ground);
             movement(&mut player);
             move_enemy(&mut enemy);
@@ -118,8 +118,10 @@ async fn main() {
                 RED,
             );
             if is_key_pressed(KeyCode::Space) {
-                player.x = screen_width() / 2.0;
-                player.y = screen_height() / 2.0;
+                score = 0.0;
+                player.x = 100.0;
+                player.y = ground;
+                enemy.x = screen_width() + DEFAULT_SIZE;
                 gameover = false;
             }
         }

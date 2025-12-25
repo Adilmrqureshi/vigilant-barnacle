@@ -28,13 +28,20 @@ jobs:
       - name: Prepare Deployment Directory
         run: |
           mkdir -p ./deploy
+          cp web/index.html ./deploy/
           for wasm in target/wasm32-unknown-unknown/release/*.wasm; do
-            echo "------ $basename"
+            echo "------"
             name=$(basename "$wasm" .wasm)
             mkdir -p deploy/games/$name
-            cp "$wasm" deploy/games/$name/
-            cp web/template.txt deploy/games/$name/index.html
-            echo '<script>load($wasm);</script></body></html>'
+            cp "$wasm" ./deploy/games/$name/
+            cp web/template.txt ./deploy/games/$name/index.html
+            cat >> deploy/games/$name/index.html <<EOF
+              <script>
+                  load("$name.wasm");
+              </script>
+              </body>
+              </html>
+            EOF
           done
 
       - name: Deploy

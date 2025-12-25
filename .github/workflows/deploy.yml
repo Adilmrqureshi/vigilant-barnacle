@@ -37,6 +37,10 @@ jobs:
             cp web/template.txt ./deploy/games/$name/index.html
             echo "<script>load(\"$name.wasm\");</script></body></html>" >> ./deploy/games/$name/index.html
           done
+          ls ./deploy
+          echo "--------"
+          cd deploy
+          ls
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3

@@ -139,6 +139,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "jumper"
+version = "0.1.0"
+dependencies = [
+ "macroquad",
+ "shared",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.178"
 source = "registry+https://github.com/rust-lang/crates.io-index"

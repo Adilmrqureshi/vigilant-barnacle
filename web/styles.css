@@ -1,0 +1,61 @@
+body {
+  background-color: #353535;
+  color: #fff;
+  font-family: "Press Start 2P", system-ui;
+  margin: auto;
+  text-align: center;
+  padding: 72px;
+}
+
+.tile {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+  background-size: contain;
+  box-shadow: 5.3px 10.6px 10.6px hsl(0deg 0% 0% / 0.34);
+}
+
+.dodger {
+  background-image: url("./assets/square-dodger.png");
+}
+
+.soon {
+  background-color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+}
+
+section {
+  margin-top: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+}
+
+.row {
+  display: flex;
+  width: 100%;
+  padding: 0 36px;
+  flex-direction: column; 
+  justify-content: center;
+  gap: 64px;
+}
+
+@media(min-width: 700px) {
+  .tile {
+    width: 300px;
+  }
+
+  .row {
+    flex-direction: row;
+  }
+
+  .container {
+    width: fit-content;
+  }
+}

@@ -5,6 +5,7 @@ struct Shape {
     force: f32,
     x: f32,
     y: f32,
+    is_jumping: bool,
 }
 
 const DEFAULT_SIZE: f32 = 64.0;
@@ -28,7 +29,10 @@ impl Shape {
 
 fn movement(player: &mut Shape) {
     if is_key_pressed(KeyCode::Space) {
-        player.force = 6.0;
+        if !player.is_jumping {
+            player.is_jumping = true;
+            player.force = 6.0;
+        }
     }
 }
 
@@ -52,15 +56,13 @@ fn render(player: &Shape, enemy: &Shape) {
 }
 
 fn physics(player: &mut Shape, ground: &f32) {
-    println!("Ground: {}", ground);
-    println!("Y: {}", player.y);
-    println!("Force: {}", player.force);
     let time_delta = get_frame_time();
     player.y -= player.force;
     if player.y < *ground {
         player.force -= GRAVITY * time_delta;
     } else {
         player.y = *ground;
+        player.is_jumping = false;
     }
 }
 
@@ -73,6 +75,7 @@ async fn main() {
         y: ground,
         size: DEFAULT_SIZE,
         force: 0.0,
+        is_jumping: false,
     };
 
     let mut enemy = Shape {
@@ -80,6 +83,7 @@ async fn main() {
         y: ground,
         size: DEFAULT_SIZE,
         force: 10.0,
+        is_jumping: false,
     };
 
     let mut score = 0.0;
@@ -88,6 +92,7 @@ async fn main() {
 
         if !gameover {
             score = get_time() * 1000.0;
+            physics(&mut player, &ground);
             movement(&mut player);
             move_enemy(&mut enemy);
         }
@@ -96,7 +101,6 @@ async fn main() {
         let text_dimensions = measure_text(&text, None, 50, 1.0);
         draw_text(&text, 10.0, 10.0 + text_dimensions.height, 32.0, WHITE);
 
-        physics(&mut player, &ground);
         render(&player, &enemy);
 
         if enemy.collides_with(&player) {

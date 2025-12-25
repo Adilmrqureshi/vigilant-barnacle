@@ -32,13 +32,12 @@ jobs:
           for wasm in target/wasm32-unknown-unknown/release/*.wasm; do
             echo "------"
             name=$(basename "$wasm" .wasm)
+            echo &name
             mkdir -p deploy/games/$name
             cp "$wasm" ./deploy/games/$name/
             cp web/template.txt ./deploy/games/$name/index.html
             echo "<script>load(\"$name.wasm\");</script></body></html>" >> ./deploy/games/$name/index.html
           done
-          ls ./deploy
-          echo "--------"
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3

@@ -27,10 +27,15 @@ jobs:
 
       - name: Prepare Deployment Directory
         run: |
-          mkdir -p ./deploy/game
-          cp ./target/wasm32-unknown-unknown/release/my-game.wasm ./deploy/game/
-          cp index.game.html ./deploy/game/index.html
-          cp index.html ./deploy/
+          mkdir -p ./deploy
+          for wasm in target/wasm32-unknown-unknown/release/*.wasm; do
+            echo "------ $basename"
+            name=$(basename "$wasm" .wasm)
+            mkdir -p deploy/games/$name
+            cp "$wasm" deploy/games/$name/
+            cp web/template.txt deploy/games/$name/index.html
+            echo '<script>load($wasm);</script></body></html>'
+          done
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3

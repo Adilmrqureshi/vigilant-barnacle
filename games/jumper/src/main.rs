@@ -73,17 +73,6 @@ async fn main() {
         );
         draw_rectangle(0.0, ground + DEFAULT_SIZE, screen_width(), 100.0, BLUE);
 
-        for e in &world.entities {
-            draw_rectangle_lines(
-                e.transform.x,
-                e.transform.y,
-                e.transform.w,
-                e.transform.h,
-                2.0,
-                WHITE,
-            );
-        }
-
         if gameover {
             let text = "GAME OVER!";
             let text_dimensions = measure_text(text, None, 50, 1.0);

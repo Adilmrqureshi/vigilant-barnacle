@@ -173,19 +173,6 @@ impl World {
 }
 
 #[cfg(test)]
-mod test_utils {
-    use super::*;
-
-    pub fn input(dt: f32, jump: bool) -> Input {
-        Input { dt, is_jump: jump }
-    }
-
-    pub fn entity_at(x: f32, y: f32) -> Entity {
-        Entity::new(x, y)
-    }
-}
-
-#[cfg(test)]
 mod test {
     use super::*;
 

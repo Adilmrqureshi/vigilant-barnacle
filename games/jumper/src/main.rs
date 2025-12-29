@@ -1,110 +1,87 @@
 use macroquad::prelude::*;
-
-struct Shape {
-    size: f32,
-    force: f32,
-    x: f32,
-    y: f32,
-    is_jumping: bool,
-}
+use shared::{Entity, Input, World};
 
 const DEFAULT_SIZE: f32 = 64.0;
-const GRAVITY: f32 = 9.81;
 const GROUND_HEIGHT: f32 = 100.0;
 
-impl Shape {
-    fn collides_with(&self, other: &Self) -> bool {
-        self.rect().overlaps(&other.rect())
-    }
-
-    fn rect(&self) -> Rect {
-        Rect {
-            x: self.x - self.size / 2.0,
-            y: self.y - self.size / 2.0,
-            w: self.size,
-            h: self.size,
-        }
-    }
-}
-
-fn movement(player: &mut Shape) {
-    if is_key_pressed(KeyCode::Space) {
-        if !player.is_jumping {
-            player.is_jumping = true;
-            player.force = 6.0;
-        }
-    }
-}
-
-fn move_enemy(enemy: &mut Shape) {
-    if enemy.x < -DEFAULT_SIZE {
-        enemy.x = screen_width() + DEFAULT_SIZE * rand::gen_range(0, 10) as f32
-    }
-    enemy.x -= enemy.force;
-}
-
-fn render(player: &Shape, enemy: &Shape) {
-    draw_rectangle(player.x, player.y, player.size, player.size, YELLOW);
-    draw_rectangle(enemy.x, enemy.y, enemy.size, enemy.size, RED);
-    draw_rectangle(
-        0.0,
-        screen_height() - GROUND_HEIGHT,
-        screen_width(),
-        GROUND_HEIGHT,
-        BLUE,
-    );
-}
-
-fn physics(player: &mut Shape, ground: &f32) {
-    let time_delta = get_frame_time();
-    player.y -= player.force;
-    if player.y < *ground {
-        player.force -= GRAVITY * time_delta;
-    } else {
-        player.y = *ground;
-        player.is_jumping = false;
-    }
-}
-
-#[macroquad::main("")]
+#[macroquad::main("My game")]
 async fn main() {
-    let ground = screen_height() - GROUND_HEIGHT - DEFAULT_SIZE;
+    let ground = screen_height() - GROUND_HEIGHT;
     let mut gameover = false;
-    let mut player = Shape {
-        x: 100.0,
-        y: ground,
-        size: DEFAULT_SIZE,
-        force: 0.0,
-        is_jumping: false,
-    };
+    let player_ent = Entity::new(100.0, screen_height() - GROUND_HEIGHT);
+    let enemy_ent = Entity::new(
+        // 3.0 is to add some padding so the user has time
+        // to react at the start of the game
+        screen_width() + DEFAULT_SIZE * 3.0,
+        screen_height() - GROUND_HEIGHT,
+    );
 
-    let mut enemy = Shape {
-        x: screen_width() + DEFAULT_SIZE,
-        y: ground,
-        size: DEFAULT_SIZE,
-        force: 10.0,
-        is_jumping: false,
-    };
+    let mut world = World::new();
+
+    world.spawn(player_ent.with_jump(300.0, ground).with_collide());
+    world.spawn(
+        enemy_ent
+            .with_collide()
+            // By making the speed a factor of screen width, the speed is proportional to the size
+            // of the screen
+            .with_move(-screen_width(), 0.0),
+    );
+    let time = get_frame_time();
 
     let mut score = 0.0;
     loop {
         clear_background(DARKGREEN);
 
         if !gameover {
-            score += get_frame_time() * 1000.0;
-            physics(&mut player, &ground);
-            movement(&mut player);
-            move_enemy(&mut enemy);
+            score += get_frame_time() * 100.0;
+            let input = Input {
+                dt: time,
+                is_jump: is_key_pressed(KeyCode::Space),
+            };
+            let Some(ref c) = world.entities[0].collide else {
+                continue;
+            };
+            if c.is_collided {
+                gameover = true;
+            }
+            world.update(&input);
+            if world.entities[1].transform.x < -DEFAULT_SIZE {
+                world.entities[1].set_position(
+                    screen_width() + DEFAULT_SIZE * rand::gen_range(2, 10) as f32,
+                    ground - (DEFAULT_SIZE * 2.0) * rand::gen_range(0, 2) as f32,
+                );
+            }
         }
 
         let text = format!("{:.0}", score);
         let text_dimensions = measure_text(&text, None, 50, 1.0);
         draw_text(&text, 10.0, 10.0 + text_dimensions.height, 32.0, WHITE);
 
-        render(&player, &enemy);
+        draw_rectangle(
+            world.entities[0].transform.x,
+            world.entities[0].transform.y,
+            DEFAULT_SIZE,
+            DEFAULT_SIZE,
+            YELLOW,
+        );
+        draw_rectangle(
+            world.entities[1].transform.x,
+            world.entities[1].transform.y,
+            DEFAULT_SIZE,
+            DEFAULT_SIZE,
+            RED,
+        );
+        draw_rectangle(0.0, ground + DEFAULT_SIZE, screen_width(), 100.0, BLUE);
 
-        if enemy.collides_with(&player) {
-            gameover = true;
+        for e in &world.entities {
+            draw_rectangle_lines(
+                e.transform.x,
+                e.transform.y,
+                e.transform.w,
+                e.transform.h,
+                2.0,
+                WHITE,
+            );
         }
 
         if gameover {
@@ -117,13 +94,6 @@ async fn main() {
                 50.0,
                 RED,
             );
-            if is_key_pressed(KeyCode::Space) {
-                score = 0.0;
-                player.x = 100.0;
-                player.y = ground;
-                enemy.x = screen_width() + DEFAULT_SIZE;
-                gameover = false;
-            }
         }
 
         next_frame().await

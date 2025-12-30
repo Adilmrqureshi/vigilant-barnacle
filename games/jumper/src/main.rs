@@ -21,6 +21,7 @@ async fn main() {
 
     let mut world = World::new();
 
+    world.set_origin(0.0, 200.0);
     world.spawn(player_ent.with_jump(300.0, 0.0).with_collide().with_render(
         DEFAULT_SIZE,
         DEFAULT_SIZE,
@@ -40,7 +41,6 @@ async fn main() {
 
     loop {
         clear_background(DARKGREEN);
-        world.set_origin(0.0, 200.0);
 
         if !gameover {
             score += get_frame_time() * 100.0;
@@ -67,17 +67,16 @@ async fn main() {
             }
         }
 
+        world.render();
+        draw_rectangle(-screen_width() / 2.0, -100.0, screen_width(), 100.0, BLUE);
+
         let text = format!("{:.0}", score);
         let text_dimensions = measure_text(&text, None, 50, 1.0);
         let score_pos = Transform {
             x: 10.0,
             y: 10.0 + text_dimensions.height,
         };
-
-        world.render();
-        draw_rectangle(-screen_width() / 2.0, -100.0, screen_width(), 100.0, BLUE);
-
-        render_text(&mut world, &text, 20.0, &score_pos, WHITE);
+        render_text(&mut world, &text, 40.0, &score_pos, WHITE);
 
         if gameover {
             let text = "GAME OVER!";

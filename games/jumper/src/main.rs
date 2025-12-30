@@ -8,8 +8,11 @@ const GROUND_HEIGHT: f32 = 100.0;
 async fn main() {
     let ground = screen_height() - GROUND_HEIGHT;
     let mut gameover = false;
-    let player_ent = Entity::new(100.0, screen_height() - GROUND_HEIGHT);
+    let player_id = 1;
+    let enemy_id = 2;
+    let player_ent = Entity::new(player_id, 100.0, screen_height() - GROUND_HEIGHT);
     let enemy_ent = Entity::new(
+        enemy_id,
         // 3.0 is to add some padding so the user has time
         // to react at the start of the game
         screen_width() + DEFAULT_SIZE * 3.0,
@@ -18,13 +21,19 @@ async fn main() {
 
     let mut world = World::new();
 
-    world.spawn(player_ent.with_jump(300.0, ground).with_collide());
+    world.spawn(
+        player_ent
+            .with_jump(300.0, ground)
+            .with_collide()
+            .with_render(DEFAULT_SIZE, DEFAULT_SIZE, YELLOW),
+    );
     world.spawn(
         enemy_ent
             .with_collide()
             // By making the speed a factor of screen width, the speed is proportional to the size
             // of the screen
-            .with_move(-screen_width(), 0.0),
+            .with_move(-screen_width(), 0.0)
+            .with_render(DEFAULT_SIZE, DEFAULT_SIZE, RED),
     );
     let time = get_frame_time();
 
@@ -45,8 +54,8 @@ async fn main() {
                 gameover = true;
             }
             world.update(&input);
-            if world.entities[1].transform.x < -DEFAULT_SIZE {
-                world.entities[1].set_position(
+            if world.find(enemy_id).unwrap().transform.x < -DEFAULT_SIZE {
+                world.find_mut(enemy_id).unwrap().set_position(
                     screen_width() + DEFAULT_SIZE * rand::gen_range(2, 10) as f32,
                     ground - (DEFAULT_SIZE * 2.0) * rand::gen_range(0, 2) as f32,
                 );
@@ -58,15 +67,15 @@ async fn main() {
         draw_text(&text, 10.0, 10.0 + text_dimensions.height, 32.0, WHITE);
 
         draw_rectangle(
-            world.entities[0].transform.x,
-            world.entities[0].transform.y,
+            world.find(player_id).unwrap().transform.x,
+            world.find(player_id).unwrap().transform.y,
             DEFAULT_SIZE,
             DEFAULT_SIZE,
             YELLOW,
         );
         draw_rectangle(
-            world.entities[1].transform.x,
-            world.entities[1].transform.y,
+            world.find(enemy_id).unwrap().transform.x,
+            world.find(enemy_id).unwrap().transform.y,
             DEFAULT_SIZE,
             DEFAULT_SIZE,
             RED,

@@ -1,3 +1,5 @@
+use macroquad::shapes::draw_rectangle;
+
 use crate::*;
 
 pub fn movement_system(entities: &mut [Entity], input: &components::Input) {
@@ -38,6 +40,22 @@ pub fn collide_system(entities: &mut [Entity]) {
                 col_2.is_collided = true;
             }
         }
+    }
+}
+
+pub fn render_system(entities: &[Entity]) {
+    for entity in entities {
+        let Some(render) = &entity.render else {
+            continue;
+        };
+
+        draw_rectangle(
+            entity.transform.x,
+            entity.transform.y,
+            render.shape.w,
+            render.shape.h,
+            render.color,
+        )
     }
 }
 

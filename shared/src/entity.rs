@@ -1,19 +1,25 @@
+use macroquad::color::Color;
+
 use crate::*;
 
 #[derive(Debug)]
 pub struct Entity {
+    pub id: i32,
     pub transform: Rect,
 
+    pub render: Option<components::Render>,
     pub jump: Option<components::Jump>,
     pub collide: Option<components::Collide>,
     pub movement: Option<components::Movement>,
 }
 
 impl Entity {
-    pub fn new(x: f32, y: f32) -> Self {
+    pub fn new(id: i32, x: f32, y: f32) -> Self {
         Self {
+            id,
             jump: None,
             collide: None,
+            render: None,
             movement: None,
             transform: Rect {
                 x,
@@ -48,6 +54,14 @@ impl Entity {
     pub fn with_move(mut self, x: f32, y: f32) -> Self {
         self.movement = Some(components::Movement {
             velocity: components::Velocity { x, y },
+        });
+        self
+    }
+
+    pub fn with_render(mut self, w: f32, h: f32, color: Color) -> Self {
+        self.render = Some(Render {
+            shape: Shape { w, h },
+            color,
         });
         self
     }

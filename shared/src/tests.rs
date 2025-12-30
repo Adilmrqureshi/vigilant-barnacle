@@ -4,7 +4,7 @@ mod test {
 
     #[test]
     fn movement_moves_entity_when_not_colliding() {
-        let mut entities = vec![Entity::new(0.0, 0.0).with_move(10.0, 0.0)];
+        let mut entities = vec![Entity::new(1, 0.0, 0.0).with_move(10.0, 0.0)];
 
         let input = components::Input {
             dt: 1.0,
@@ -19,7 +19,7 @@ mod test {
 
     #[test]
     fn movement_stops_when_collided() {
-        let mut entity = Entity::new(0.0, 0.0).with_move(10.0, 0.0).with_collide();
+        let mut entity = Entity::new(1, 0.0, 0.0).with_move(10.0, 0.0).with_collide();
 
         entity.collide.as_mut().unwrap().is_collided = true;
 
@@ -36,7 +36,7 @@ mod test {
 
     #[test]
     fn jump_applies_force_when_grounded() {
-        let mut entities = vec![Entity::new(0.0, 100.0).with_jump(300.0, 100.0)];
+        let mut entities = vec![Entity::new(1, 0.0, 100.0).with_jump(300.0, 100.0)];
 
         let input = components::Input {
             dt: 1.0,
@@ -51,7 +51,7 @@ mod test {
 
     #[test]
     fn gravity_applies_when_airborne() {
-        let mut entity = Entity::new(0.0, 90.0).with_jump(300.0, 100.0);
+        let mut entity = Entity::new(1, 0.0, 90.0).with_jump(300.0, 100.0);
 
         // Simulate upward velocity
         entity.jump.as_mut().unwrap().velocity.y = 100.0;
@@ -71,8 +71,9 @@ mod test {
     #[test]
     fn collision_detects_overlap() {
         let mut entities = vec![
-            Entity::new(0.0, 0.0).with_collide(),
-            Entity::new(32.0, 32.0).with_collide(), // overlaps 64x64
+            Entity::new(1, 0.0, 0.0).with_collide(),
+            Entity::new(2, 32.0, 32.0).with_collide(), // overlaps 64x64
+                                                       //
         ];
 
         collide_system(&mut entities);
@@ -84,8 +85,8 @@ mod test {
     #[test]
     fn collision_not_detected_when_separated() {
         let mut entities = vec![
-            Entity::new(0.0, 0.0).with_collide(),
-            Entity::new(200.0, 200.0).with_collide(),
+            Entity::new(1, 0.0, 0.0).with_collide(),
+            Entity::new(2, 200.0, 200.0).with_collide(),
         ];
 
         collide_system(&mut entities);
@@ -99,7 +100,7 @@ mod test {
         let mut world = World::new();
 
         world.spawn(
-            Entity::new(0.0, 100.0)
+            Entity::new(1, 0.0, 100.0)
                 .with_jump(200.0, 100.0)
                 .with_move(10.0, 0.0)
                 .with_collide(),

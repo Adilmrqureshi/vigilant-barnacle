@@ -1,3 +1,5 @@
+use macroquad::color::Color;
+
 #[derive(Debug)]
 pub struct Input {
     pub dt: f32,
@@ -32,4 +34,16 @@ pub struct Collide {
 #[derive(Debug)]
 pub struct Movement {
     pub velocity: Velocity,
+}
+
+#[derive(Debug)]
+pub struct Shape {
+    pub w: f32,
+    pub h: f32,
+}
+
+#[derive(Debug)]
+pub struct Render {
+    pub shape: Shape,
+    pub color: Color,
 }

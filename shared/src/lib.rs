@@ -20,6 +20,14 @@ impl World {
         }
     }
 
+    pub fn find(&self, id: i32) -> Option<&Entity> {
+        self.entities.iter().find(|ent| id == ent.id)
+    }
+
+    pub fn find_mut(&mut self, id: i32) -> Option<&mut Entity> {
+        self.entities.iter_mut().find(|ent| id == ent.id)
+    }
+
     pub fn spawn(&mut self, entity: Entity) {
         self.entities.push(entity);
     }
@@ -28,5 +36,6 @@ impl World {
         jump_system(&mut self.entities, input);
         collide_system(&mut self.entities);
         movement_system(&mut self.entities, input);
+        render_system(&mut self.entities);
     }
 }

@@ -45,8 +45,7 @@ mod test {
 
         jump_system(&mut entities, &input);
 
-        // y decreases because you subtract velocity.y
-        assert!(entities[0].transform.y < 100.0);
+        assert!(entities[0].transform.y > 100.0);
     }
 
     #[test]
@@ -115,6 +114,6 @@ mod test {
 
         let e = &world.entities[0];
         assert!(e.transform.x > 0.0);
-        assert!(e.transform.y < 100.0);
+        assert!(e.transform.y > 100.0);
     }
 }

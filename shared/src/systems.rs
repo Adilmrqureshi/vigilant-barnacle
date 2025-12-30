@@ -65,16 +65,16 @@ pub fn jump_system(entities: &mut [Entity], input: &components::Input) {
             continue;
         };
 
-        if entity.transform.y >= jump.ground_level {
+        if entity.transform.y <= jump.ground_level {
             if input.is_jump {
                 jump.velocity.y = jump.force;
             } else {
                 jump.velocity.y = 0.0;
             }
-        } else if entity.transform.y < jump.ground_level {
+        } else if entity.transform.y > jump.ground_level {
             jump.velocity.y -= jump.gravity * input.dt;
         }
         entity.transform.x += jump.velocity.x * input.dt;
-        entity.transform.y -= jump.velocity.y * input.dt;
+        entity.transform.y += jump.velocity.y * input.dt;
     }
 }

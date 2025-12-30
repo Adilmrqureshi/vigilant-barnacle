@@ -30,6 +30,13 @@ impl Entity {
         }
     }
 
+    pub fn reset(&mut self) {
+        let Some(ref mut c) = self.collide else {
+            return;
+        };
+        c.is_collided = false;
+    }
+
     pub fn set_position(&mut self, x: f32, y: f32) {
         self.transform.x = x;
         self.transform.y = y;

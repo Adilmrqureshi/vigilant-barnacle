@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main # If your default branch is named something else, change this
-      - staging
 
 permissions:
   contents: write

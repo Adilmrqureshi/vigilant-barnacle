@@ -2,24 +2,24 @@ use macroquad::experimental::animation::{AnimatedSprite, Animation};
 use macroquad::prelude::*;
 use shared::{Entity, GameState, Input, Transform, World, render_text};
 
-const FRAGMENT_SHADER: &str = include_str!("./assets/starfield-shader.glsl");
-
-const VERTEX_SHADER: &str = "#version 100
-attribute vec3 position;
-attribute vec2 texcoord;
-attribute vec4 color0;
-varying float iTime;
-
-uniform mat4 Model;
-uniform mat4 Projection;
-uniform vec4 _Time;
-
-void main() {
-    gl_Position = Projection * Model * vec4(position, 1);
-    iTime = _Time.x;
-}
-";
-
+// const FRAGMENT_SHADER: &str = include_str!("./assets/starfield-shader.glsl");
+//
+// const VERTEX_SHADER: &str = "#version 100
+// attribute vec3 position;
+// attribute vec2 texcoord;
+// attribute vec4 color0;
+// varying float iTime;
+//
+// uniform mat4 Model;
+// uniform mat4 Projection;
+// uniform vec4 _Time;
+//
+// void main() {
+//     gl_Position = Projection * Model * vec4(position, 1);
+//     iTime = _Time.x;
+// }
+// ";
+//
 const MOVEMENT_SPEED: f32 = 100.0;
 
 fn create_user() -> Entity {
@@ -45,25 +45,26 @@ async fn main() {
         .expect("Couldn't load file");
     enemy_small_texture.set_filter(FilterMode::Nearest);
     build_textures_atlas();
-    let mut direction_modifier: f32 = 0.0;
+    // let mut direction_modifier: f32 = 0.0;
 
     let render_target = render_target(320, 150);
-
     render_target.texture.set_filter(FilterMode::Nearest);
-    let material = load_material(
-        ShaderSource::Glsl {
-            vertex: VERTEX_SHADER,
-            fragment: FRAGMENT_SHADER,
-        },
-        MaterialParams {
-            uniforms: vec![
-                UniformDesc::new("iResolution", UniformType::Float2),
-                UniformDesc::new("direction_modifier", UniformType::Float1),
-            ],
-            ..Default::default()
-        },
-    )
-    .unwrap();
+
+    // let material = load_material(
+    //     ShaderSource::Glsl {
+    //         vertex: VERTEX_SHADER,
+    //         fragment: FRAGMENT_SHADER,
+    //     },
+    //     MaterialParams {
+    //         uniforms: vec![
+    //             UniformDesc::new("iResolution", UniformType::Float2),
+    //             UniformDesc::new("direction_modifier", UniformType::Float1),
+    //         ],
+    //         ..Default::default()
+    //     },
+    // )
+    // .unwrap();
+
     let mut ship_sprite = AnimatedSprite::new(
         16,
         24,
@@ -103,9 +104,9 @@ async fn main() {
     loop {
         clear_background(BLACK);
         set_default_camera();
-        material.set_uniform("iResolution", (screen_width(), screen_height()));
-        material.set_uniform("direction_modifier", direction_modifier);
-        gl_use_material(&material);
+        // material.set_uniform("iResolution", (screen_width(), screen_height()));
+        // material.set_uniform("direction_modifier", direction_modifier);
+        // gl_use_material(&material);
         draw_texture_ex(
             &render_target.texture,
             0.,
@@ -128,13 +129,13 @@ async fn main() {
             world.new_update(&input);
             ship_sprite.set_animation(0);
             if is_key_down(KeyCode::Right) {
-                direction_modifier += 0.05 * delta_time;
+                // direction_modifier += 0.05 * delta_time;
                 ship_sprite.set_animation(1);
                 world.find_mut(1).unwrap().transform.x += MOVEMENT_SPEED * delta_time;
             }
             if is_key_down(KeyCode::Left) {
                 ship_sprite.set_animation(2);
-                direction_modifier -= 0.05 * delta_time;
+                // direction_modifier -= 0.05 * delta_time;
                 world.find_mut(1).unwrap().transform.x -= MOVEMENT_SPEED * delta_time;
             }
             if is_key_down(KeyCode::Down) {

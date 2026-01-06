@@ -30,6 +30,7 @@ fn create_user() -> Entity {
 
 #[macroquad::main("Shooter")]
 async fn main() {
+    console_error_panic_hook::set_once();
     let mut world = World::new();
     world.spawn(create_user());
     set_pc_assets_folder("./assets");

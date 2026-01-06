@@ -63,7 +63,7 @@ impl Entity {
         self.jump = Some(components::Jump {
             force,
             // change these
-            gravity: 450.0,
+            gravity: 500.0,
             ground_level,
             velocity: components::Velocity { x: 0.0, y: 0.0 },
         });

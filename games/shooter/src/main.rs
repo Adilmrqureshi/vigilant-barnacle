@@ -32,7 +32,7 @@ fn create_user() -> Entity {
 async fn main() {
     let mut world = World::new();
     world.spawn(create_user());
-    set_pc_assets_folder("assets");
+    set_pc_assets_folder("./assets");
     // Texture2D stores image data in GPU (Image uses the CPU)
     let ship_texture: Texture2D = load_texture("ship.png").await.expect("Couldn't load file");
     ship_texture.set_filter(FilterMode::Linear);
@@ -179,8 +179,6 @@ async fn main() {
                 },
             )
         }
-
-        debug(&world.entities);
 
         if world.state == GameState::GameOver {
             let text = "GAME OVER!";

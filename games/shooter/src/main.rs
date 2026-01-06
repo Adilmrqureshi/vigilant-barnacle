@@ -2,7 +2,7 @@ use macroquad::experimental::animation::{AnimatedSprite, Animation};
 use macroquad::prelude::*;
 use shared::{Entity, GameState, Input, Transform, World, render_text};
 
-const FRAGMENT_SHADER: &str = include_str!("starfield-shader.glsl");
+const FRAGMENT_SHADER: &str = include_str!("./assets/starfield-shader.glsl");
 
 const VERTEX_SHADER: &str = "#version 100
 attribute vec3 position;

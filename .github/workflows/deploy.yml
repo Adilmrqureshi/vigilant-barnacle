@@ -27,8 +27,9 @@ jobs:
 
       - name: Prepare Deployment Directory
         run: |
-          mkdir -p ./deploy
+          mkdir -p ./deploy/assets
           cp -a ./web/. ./deploy/
+          cp -a ./assets/. ./deploy/
           for wasm in target/wasm32-unknown-unknown/release/*.wasm; do
             echo "------"
             name=$(basename "$wasm" .wasm)

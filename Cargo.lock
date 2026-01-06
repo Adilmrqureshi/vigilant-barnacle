@@ -254,6 +254,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "shooter"
+version = "0.1.0"
+dependencies = [
+ "macroquad",
+ "shared",
+]
+
+[[package]]
 name = "simd-adler32"
 version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -1,6 +1,6 @@
 use macroquad::experimental::animation::{AnimatedSprite, Animation};
 use macroquad::prelude::*;
-use shared::{Entity, GameState, Input, Shape, Transform, World, debug, render_text};
+use shared::{Entity, GameState, Input, Transform, World, debug, render_text};
 
 const FRAGMENT_SHADER: &str = include_str!("starfield-shader.glsl");
 
@@ -129,11 +129,13 @@ async fn main() {
             world.new_update(&input);
             ship_sprite.set_animation(0);
             if is_key_down(KeyCode::Right) {
+                direction_modifier += 0.05 * delta_time;
                 ship_sprite.set_animation(1);
                 world.find_mut(1).unwrap().transform.x += MOVEMENT_SPEED * delta_time;
             }
             if is_key_down(KeyCode::Left) {
                 ship_sprite.set_animation(2);
+                direction_modifier -= 0.05 * delta_time;
                 world.find_mut(1).unwrap().transform.x -= MOVEMENT_SPEED * delta_time;
             }
             if is_key_down(KeyCode::Down) {

@@ -100,7 +100,6 @@ impl World {
                 col_2.is_collided = false;
 
                 if a.transform.overlaps(&b.transform) {
-                    println!("{} {}", a.id, b.id);
                     if a.id == 1 || b.id == 1 {
                         self.state = GameState::GameOver;
                     }

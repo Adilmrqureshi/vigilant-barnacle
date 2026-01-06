@@ -32,7 +32,7 @@ fn create_user() -> Entity {
 async fn main() {
     let mut world = World::new();
     world.spawn(create_user());
-    set_pc_assets_folder("../../assets/shooter");
+    set_pc_assets_folder("assets/shooter");
     // Texture2D stores image data in GPU (Image uses the CPU)
     let ship_texture: Texture2D = load_texture("ship.png").await.expect("Couldn't load file");
     ship_texture.set_filter(FilterMode::Linear);
@@ -120,7 +120,6 @@ async fn main() {
         world.set_default_origin();
 
         let delta_time = get_frame_time();
-        println!("{:?}", world.state);
         if world.state == GameState::Running {
             let input = Input {
                 dt: delta_time,

@@ -36,10 +36,10 @@ async fn main() {
     // Texture2D stores image data in GPU (Image uses the CPU)
     let ship_texture: Texture2D = load_texture("ship.png").await.expect("Couldn't load file");
     ship_texture.set_filter(FilterMode::Linear);
-    let bullet_texture: Texture2D = load_texture("laser-bolts.png")
-        .await
-        .expect("Couldn't load file");
-    bullet_texture.set_filter(FilterMode::Linear);
+    // let bullet_texture: Texture2D = load_texture("laser-bolts.png")
+    //     .await
+    //     .expect("Couldn't load file");
+    // bullet_texture.set_filter(FilterMode::Linear);
     let enemy_small_texture: Texture2D = load_texture("enemy-small.png")
         .await
         .expect("Couldn't load file");
@@ -47,8 +47,8 @@ async fn main() {
     build_textures_atlas();
     // let mut direction_modifier: f32 = 0.0;
 
-    let render_target = render_target(320, 150);
-    render_target.texture.set_filter(FilterMode::Nearest);
+    // let render_target = render_target(320, 150);
+    // render_target.texture.set_filter(FilterMode::Nearest);
 
     // let material = load_material(
     //     ShaderSource::Glsl {
@@ -107,17 +107,17 @@ async fn main() {
         // material.set_uniform("iResolution", (screen_width(), screen_height()));
         // material.set_uniform("direction_modifier", direction_modifier);
         // gl_use_material(&material);
-        draw_texture_ex(
-            &render_target.texture,
-            0.,
-            0.,
-            WHITE,
-            DrawTextureParams {
-                dest_size: Some(vec2(screen_width(), screen_height())),
-                ..Default::default()
-            },
-        );
-        gl_use_default_material();
+        // draw_texture_ex(
+        //     &render_target.texture,
+        //     0.,
+        //     0.,
+        //     WHITE,
+        //     DrawTextureParams {
+        //         dest_size: Some(vec2(screen_width(), screen_height())),
+        //         ..Default::default()
+        //     },
+        // );
+        // gl_use_default_material();
         world.set_default_origin();
 
         let delta_time = get_frame_time();

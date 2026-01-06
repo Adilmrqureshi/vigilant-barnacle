@@ -10,7 +10,7 @@ async fn main() {
     let enemy_id = 2;
     let edge = screen_width() / 2.0;
 
-    let player_ent = Entity::new(player_id, -100.0, 0.0);
+    let player_ent = Entity::new(player_id, -screen_width() / 4.0, 0.0);
     let enemy_ent = Entity::new(
         enemy_id,
         // 3.0 is to add some padding so the user has time
@@ -22,7 +22,7 @@ async fn main() {
     let mut world = World::new();
 
     world.set_origin(0.0, 200.0);
-    world.spawn(player_ent.with_jump(300.0, 0.0).with_collide().with_render(
+    world.spawn(player_ent.with_jump(350.0, 0.0).with_collide().with_render(
         DEFAULT_SIZE,
         DEFAULT_SIZE,
         YELLOW,

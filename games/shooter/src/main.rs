@@ -1,6 +1,6 @@
 use macroquad::experimental::animation::{AnimatedSprite, Animation};
 use macroquad::prelude::*;
-use shared::{Entity, GameState, Input, Transform, World, debug, render_text};
+use shared::{Entity, GameState, Input, Transform, World, render_text};
 
 const FRAGMENT_SHADER: &str = include_str!("starfield-shader.glsl");
 

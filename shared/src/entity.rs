@@ -6,6 +6,7 @@ use crate::*;
 pub struct Entity {
     pub id: i32,
     pub transform: Rect,
+    pub default_position: Transform,
 
     pub render: Option<components::Render>,
     pub jump: Option<components::Jump>,
@@ -21,6 +22,7 @@ impl Entity {
             collide: None,
             render: None,
             movement: None,
+            default_position: Transform { x, y },
             transform: Rect {
                 x,
                 y,
@@ -30,11 +32,26 @@ impl Entity {
         }
     }
 
+    pub fn is_collided(&self) -> bool {
+        let Some(ref c) = self.collide else {
+            return false;
+        };
+        println!("Hi {}", c.is_collided);
+        return c.is_collided;
+    }
+
+    pub fn set_dimensions(&mut self, w: f32, h: f32) {
+        self.transform.w = w;
+        self.transform.h = h;
+    }
+
     pub fn reset(&mut self) {
         let Some(ref mut c) = self.collide else {
             return;
         };
         c.is_collided = false;
+        self.transform.x = self.default_position.x;
+        self.transform.y = self.default_position.y;
     }
 
     pub fn set_position(&mut self, x: f32, y: f32) {

@@ -28,13 +28,6 @@ fn create_user() -> Entity {
     entity
 }
 
-#[cfg(target_arch = "wasm32")]
-#[panic_handler]
-fn panic(info: &core::panic::PanicInfo) -> ! {
-    use core::arch::wasm32::unreachable;
-    unreachable()
-}
-
 #[macroquad::main("Shooter")]
 async fn main() {
     let mut world = World::new();

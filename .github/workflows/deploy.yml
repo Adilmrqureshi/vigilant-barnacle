@@ -29,6 +29,7 @@ jobs:
         run: |
           mkdir -p ./deploy
           cp -a ./web/. ./deploy/
+          cp -a ./assets/. ./deploy/
           for wasm in target/wasm32-unknown-unknown/release/*.wasm; do
             echo "------"
             name=$(basename "$wasm" .wasm)

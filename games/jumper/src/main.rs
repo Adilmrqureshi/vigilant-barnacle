@@ -32,7 +32,7 @@ async fn main() {
             .with_collide()
             // By making the speed a factor of screen width, the speed is proportional to the size
             // of the screen
-            .with_move(-screen_width(), 0.0)
+            .with_move(-screen_width() / 1.25, 0.0)
             .with_render(DEFAULT_SIZE, DEFAULT_SIZE, RED),
     );
 

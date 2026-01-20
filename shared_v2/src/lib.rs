@@ -75,7 +75,7 @@ pub struct Input {
 
 pub struct Systems {
     pub update: Vec<fn(&mut World, &mut GameState, &Input)>,
-    pub render: Vec<fn(&World)>,
+    pub render: Vec<fn(&World, &GameState)>,
 }
 
 pub struct Game {
@@ -205,7 +205,7 @@ impl Game {
 
     pub fn render(&self) {
         for system in &self.systems.render {
-            system(&self.world);
+            system(&self.world, &self.state);
         }
     }
 }
@@ -216,7 +216,7 @@ impl Game {
         self
     }
 
-    pub fn with_render_system(mut self, system: fn(&World)) -> Self {
+    pub fn with_render_system(mut self, system: fn(&World, &GameState)) -> Self {
         self.systems.render.push(system);
         self
     }
@@ -229,7 +229,7 @@ impl Game {
         self
     }
 
-    pub fn with_render_systems(mut self, systems: Vec<fn(&World)>) -> Self {
+    pub fn with_render_systems(mut self, systems: Vec<fn(&World, &GameState)>) -> Self {
         self.systems.render.extend(systems);
         self
     }

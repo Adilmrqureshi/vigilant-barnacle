@@ -54,7 +54,7 @@ fn gravity_engine(world: &mut World, _state: &mut GameState, input: &Input) {
     }
 }
 
-fn render_sprites(world: &World) {
+fn render_sprites(world: &World, _state: &GameState) {
     for entity in &world.entities {
         let Some(ref player) = entity.sprite else {
             continue;
@@ -96,7 +96,7 @@ fn update_sprites(world: &mut World) {
     }
 }
 
-fn collision_system(world: &mut World, state: &mut GameState, input: &Input) {
+fn collision_system(world: &mut World, state: &mut GameState, _input: &Input) {
     let len = world.entities.len();
     for i in 0..len {
         for j in i + 1..len {
@@ -105,30 +105,35 @@ fn collision_system(world: &mut World, state: &mut GameState, input: &Input) {
                 (&mut left[i], &mut right[0])
             };
 
-            if a.transform.overlaps(&b.transform) {
+            if a.tag.is_some()
+                && a.tag.unwrap() == Tag::Player
+                && a.transform.overlaps(&b.transform)
+            {
                 state.game_over = true;
             }
         }
     }
 }
 
-fn ui_system(world: &World) {
+fn ui_system(_world: &World, state: &GameState) {
     set_default_camera();
 
-    let text = "GAME OVER!";
-    let text_dimensions = measure_text(text, None, 50, 1.0);
-    let pos = Transform {
-        x: screen_width() / 2.0 - text_dimensions.width / 2.0,
-        y: screen_height() / 2.0 - text_dimensions.height / 2.0,
-    };
-    draw_text(text, pos.x, pos.y, 60.0, RED);
+    if state.game_over {
+        let text = "GAME OVER!";
+        let text_dimensions = measure_text(text, None, 50, 1.0);
+        let pos = Transform {
+            x: screen_width() / 2.0 - text_dimensions.width / 2.0,
+            y: screen_height() / 2.0 - text_dimensions.height / 2.0,
+        };
+        draw_text(text, pos.x, pos.y, 60.0, RED);
+    }
 }
 
 fn move_enemy_system(world: &mut World, _state: &mut GameState, input: &Input) {
     for e in world.with_tag_mut(Tag::Enemy) {
         e.transform.x -= 300.0 * input.dt;
         if e.transform.x < -GAME_SPRITE_SIZE {
-            e.transform.x += VIRTUAL_WIDTH;
+            e.transform.x += GAME_SPRITE_SIZE + VIRTUAL_WIDTH * rand::gen_range(1.0, 3.0);
         }
     }
 }

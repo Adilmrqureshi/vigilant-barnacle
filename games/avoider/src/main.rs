@@ -1,4 +1,5 @@
 mod background;
+mod tests;
 
 use macroquad::experimental::animation::{AnimatedSprite, Animation};
 use macroquad::prelude::*;
@@ -37,7 +38,7 @@ fn gravity_engine(world: &mut World, state: &mut GameState, input: &Input) {
         const GRAVITY: f32 = 800.0;
         const JUMP_STRENGTH: f32 = 450.0;
 
-        if is_key_pressed(KeyCode::Space) && physics.is_grounded {
+        if input.spacebar && physics.is_grounded {
             e.transform.y = GROUND;
             physics.velocity.y += JUMP_STRENGTH;
             physics.is_grounded = false;
@@ -50,8 +51,6 @@ fn gravity_engine(world: &mut World, state: &mut GameState, input: &Input) {
             }
         }
         e.transform.y += physics.velocity.y * input.dt;
-        println!("{}", e.transform.y);
-        println!("{}", physics.is_grounded);
     }
 }
 
@@ -137,11 +136,11 @@ async fn main() {
         .with_update_system(gravity_engine)
         .with_render_systems(vec![render_sprites]);
 
-    let input = Input {
-        dt: get_frame_time(),
-    };
-
     loop {
+        let input = Input {
+            dt: get_frame_time(),
+            spacebar: is_key_pressed(KeyCode::Space),
+        };
         normalise_camera(screen_w, screen_h);
         background::render_paralax_background(&mut para);
         game.render();

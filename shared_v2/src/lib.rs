@@ -1,3 +1,4 @@
+mod tests;
 use std::fmt::Debug;
 
 use macroquad::experimental::animation::AnimatedSprite;
@@ -71,6 +72,7 @@ pub struct GameState {
 
 pub struct Input {
     pub dt: f32,
+    pub spacebar: bool,
 }
 
 pub struct Systems {
@@ -242,15 +244,5 @@ impl Game {
             state: GameState::new(),
             systems: Systems::new(),
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        assert_eq!(4, 4);
     }
 }

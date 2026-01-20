@@ -16,9 +16,6 @@ pub struct Transform {
 }
 
 #[derive(Debug)]
-pub struct Handle(u32);
-
-#[derive(Debug)]
 pub struct Shape {
     pub w: f32,
     pub h: f32,

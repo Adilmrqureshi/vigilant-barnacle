@@ -43,7 +43,7 @@ pub async fn load_background_assets() -> Parallex {
     )
 }
 
-pub fn render_paralax_background(para: &mut Parallex) {
+pub fn render_paralax_background(para: &mut Parallex, game_over: bool) {
     let time = get_frame_time() as f32;
 
     if para.0.tick >= VIRTUAL_WIDTH {
@@ -66,11 +66,13 @@ pub fn render_paralax_background(para: &mut Parallex) {
         para.4.tick -= VIRTUAL_WIDTH;
     }
 
-    para.0.tick += time * 3.0;
-    para.1.tick += time * 9.0;
-    para.2.tick += time * 27.0;
-    para.3.tick += time * 81.0;
-    para.4.tick += time * 243.0;
+    if !game_over {
+        para.0.tick += time * 3.0;
+        para.1.tick += time * 9.0;
+        para.2.tick += time * 27.0;
+        para.3.tick += time * 81.0;
+        para.4.tick += time * 243.0;
+    }
 
     draw_texture_ex(
         &para.0.texture,

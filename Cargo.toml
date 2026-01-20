@@ -2,4 +2,4 @@
 name = "my-game"
 version = "0.0.1"
 resolver = "3"
-members = ["games/*", "shared"]
+members = ["games/*", "shared", "shared_v2"]

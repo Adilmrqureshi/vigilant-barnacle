@@ -1,4 +1,3 @@
-use macroquad::experimental::animation::{AnimatedSprite, Animation};
 use macroquad::prelude::*;
 
 use crate::{VIRTUAL_HEIGHT, VIRTUAL_WIDTH};

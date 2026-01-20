@@ -30,7 +30,7 @@ fn normalise_camera(screen_w: f32, screen_h: f32) {
     set_camera(&camera);
 }
 
-fn gravity_engine(world: &mut World, state: &mut GameState, input: &Input) {
+fn gravity_engine(world: &mut World, _state: &mut GameState, input: &Input) {
     for e in &mut world.entities {
         let Some(ref mut physics) = e.physics else {
             continue;

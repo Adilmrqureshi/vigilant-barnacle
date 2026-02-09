@@ -13,7 +13,7 @@ pub const VIRTUAL_WIDTH: f32 = 800.0;
 pub const VIRTUAL_HEIGHT: f32 = 600.0;
 
 fn normalise_camera(screen_w: f32, screen_h: f32) {
-    let scale = (screen_w / VIRTUAL_WIDTH).min(0.1).floor().max(1.0);
+    let scale = (screen_w / VIRTUAL_WIDTH).min(0.1).floor();
 
     let viewport_w = VIRTUAL_WIDTH * scale;
     let viewport_h = VIRTUAL_HEIGHT * scale;
@@ -24,7 +24,7 @@ fn normalise_camera(screen_w: f32, screen_h: f32) {
     let mut camera = Camera2D::default();
 
     camera.zoom = vec2(2.0 / viewport_w, -2.0 / viewport_h);
-    camera.target = vec2(VIRTUAL_WIDTH * 0.5, VIRTUAL_HEIGHT * 0.5);
+    camera.target = vec2(viewport_w * 0.5, viewport_h * 0.5);
     camera.offset = vec2(offset_x / scale, offset_y / scale);
 
     set_camera(&camera);
@@ -39,13 +39,13 @@ fn gravity_engine(world: &mut World, _state: &mut GameState, input: &Input) {
         const JUMP_STRENGTH: f32 = 450.0;
 
         if input.spacebar && physics.is_grounded {
-            e.transform.y = GROUND;
             physics.velocity.y += JUMP_STRENGTH;
             physics.is_grounded = false;
         }
         if !physics.is_grounded {
             physics.velocity.y -= GRAVITY * input.dt;
             if e.transform.y.ceil() < GROUND {
+                e.transform.y = GROUND;
                 physics.is_grounded = true;
                 physics.velocity.y = 0.0;
             }
@@ -88,7 +88,7 @@ fn update_sprites(world: &mut World) {
         };
         let Some(ref mut physics) = entity.physics else {
             player.sprite.update();
-            return;
+            continue;
         };
         if physics.is_grounded {
             player.sprite.update();
@@ -198,8 +198,8 @@ async fn main() {
     let enemy = Entity::new(Rect {
         x: VIRTUAL_WIDTH * 2.0,
         y: GROUND,
-        w: ORIGINAL_SPRITE_SIZE,
-        h: ORIGINAL_SPRITE_SIZE,
+        w: ORIGINAL_SPRITE_SIZE / 2.0,
+        h: ORIGINAL_SPRITE_SIZE / 2.0,
     })
     .with_sprite(enemy_texture, enemy_sprite)
     .with_tag(Tag::Enemy);

@@ -19,6 +19,10 @@ body {
   background-image: url("./assets/square-dodger.png");
 }
 
+.dodger {
+  background-image: url("./assets/desert-runner.png");
+}
+
 .jumper {
   background-image: url("./assets/yellow-jumper.png");
 }

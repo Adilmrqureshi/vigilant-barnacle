@@ -1,5 +1,9 @@
 mod tests;
-use std::fmt::Debug;
+use std::{
+    any::{Any, TypeId},
+    collections::HashMap,
+    fmt::Debug,
+};
 
 use macroquad::{
     color::{Color, WHITE},
@@ -76,6 +80,7 @@ pub struct Entity {
 pub struct World {
     pub entities: Vec<Entity>,
     pub sprites: Vec<Sprite>,
+    resources: HashMap<TypeId, Box<dyn Any>>,
 }
 
 pub struct GameState {
@@ -100,11 +105,17 @@ pub struct Game {
     pub systems: Systems,
 }
 
+// Resources
+pub struct EnemyManager {
+    pub active_enemy: Option<usize>,
+}
+
 impl World {
     pub fn new() -> Self {
         Self {
             entities: vec![],
             sprites: vec![],
+            resources: HashMap::new(),
         }
     }
 
@@ -128,6 +139,22 @@ impl World {
     pub fn spawn(mut self, entity: Entity) -> Self {
         self.entities.push(entity);
         self
+    }
+
+    pub fn insert_resource<T: 'static>(&mut self, resource: T) {
+        self.resources.insert(TypeId::of::<T>(), Box::new(resource));
+    }
+
+    pub fn get_resource<T: 'static>(&self) -> Option<&T> {
+        self.resources
+            .get(&TypeId::of::<T>())
+            .and_then(|r| r.downcast_ref::<T>())
+    }
+
+    pub fn get_resource_mut<T: 'static>(&mut self) -> Option<&mut T> {
+        self.resources
+            .get_mut(&TypeId::of::<T>())
+            .and_then(|r| r.downcast_mut::<T>())
     }
 }
 

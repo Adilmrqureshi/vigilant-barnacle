@@ -9,7 +9,12 @@ const ORIGINAL_SPRITE_SIZE: f32 = 48.0;
 const GAME_SPRITE_SIZE: f32 = 48.0 * 2.0;
 const GROUND: f32 = 40.0;
 const DEFAULT_PLAYER_POSITION: f32 = 96.0;
-const FLYING_START_POS: f32 = 100.0;
+const SPEED_SCREEN_RATO: f32 = 0.4;
+const CHARACTER_SCALE: f32 = 4.0;
+const FLYING_RATIO: f32 = 0.4; // Flying object show below the middle (40%) of the screen
+
+const GRAVITY: f32 = 800.0;
+const JUMP_STRENGTH: f32 = 600.0;
 
 fn normalise_camera() {
     let mut camera = Camera2D::default();
@@ -26,8 +31,6 @@ fn gravity_system(world: &mut World, _state: &mut GameState, input: &Input) {
         let Some(ref mut physics) = e.physics else {
             continue;
         };
-        const GRAVITY: f32 = 800.0;
-        const JUMP_STRENGTH: f32 = 450.0;
 
         if input.spacebar && physics.is_grounded {
             physics.velocity.y += JUMP_STRENGTH;
@@ -64,7 +67,7 @@ fn render_sprites(world: &World, _state: &GameState) {
             entity.transform.y,
             WHITE,
             DrawTextureParams {
-                dest_size: Some(frame.dest_size * 3.0),
+                dest_size: Some(frame.dest_size * CHARACTER_SCALE),
                 source: Some(frame.source_rect),
                 flip_y: true,
                 ..Default::default()
@@ -139,11 +142,60 @@ fn ui_system(_world: &World, state: &GameState) {
 }
 
 fn move_enemy_system(world: &mut World, _state: &mut GameState, input: &Input) {
+    let speed = SPEED_SCREEN_RATO * screen_width();
     for e in world.with_tag_mut(Tag::Enemy) {
-        e.transform.x -= 300.0 * input.dt;
-        if e.transform.x < -GAME_SPRITE_SIZE {
-            e.transform.x += GAME_SPRITE_SIZE + screen_width() * rand::gen_range(1.0, 3.0);
-        }
+        e.transform.x -= speed * input.dt;
+    }
+}
+
+fn enemy_spawn_system(world: &mut World, _state: &mut GameState, _input: &Input) {
+    let screen_w = screen_width();
+
+    // Step 1: read active_enemy WITHOUT holding mutable borrow
+    let active_enemy = {
+        world
+            .get_resource::<EnemyManager>()
+            .and_then(|m| m.active_enemy)
+    };
+
+    // Step 2: check if it’s still visible
+    let still_active = if let Some(idx) = active_enemy {
+        let e = &world.entities[idx];
+        e.transform.x > -GAME_SPRITE_SIZE 
+    } else {
+        false
+    };
+
+    if still_active {
+        return;
+    }
+
+    // Step 3: gather candidates (no mutable borrow yet)
+    let enemy_indices: Vec<_> = world
+        .entities
+        .iter()
+        .enumerate()
+        .filter(|(_, e)| e.tag == Some(Tag::Enemy))
+        .map(|(i, _)| i)
+        .collect();
+
+    if enemy_indices.is_empty() {
+        return;
+    }
+
+    let choice = rand::gen_range(0, enemy_indices.len() as i32) as usize;
+    let idx = enemy_indices[choice];
+
+    // Step 4: mutate entity
+    {
+        let enemy = &mut world.entities[idx];
+        enemy.transform.x = screen_w + rand::gen_range(0.0, screen_w);
+    }
+
+    // Step 5: NOW mutate the resource (separate borrow)
+    {
+        let manager = world.get_resource_mut::<EnemyManager>().unwrap();
+        manager.active_enemy = Some(idx);
     }
 }
 
@@ -184,7 +236,8 @@ fn attack_system(world: &mut World, _state: &mut GameState, input: &Input) {
 fn restart_game(game: &mut Game, input: &Input) {
     if input.spacebar {
         for player in game.world.with_tag_mut(Tag::Player) {
-            player.transform.x = 0.0;
+            player.transform.x = DEFAULT_PLAYER_POSITION;
+            player.transform.y = GROUND;
         }
 
         for enemy in game.world.with_tag_mut(Tag::Enemy) {
@@ -249,16 +302,18 @@ async fn main() {
     .with_sprite(2)
     .with_tag(Tag::Enemy);
 
+    let flying_start_position = FLYING_RATIO * screen_height();
+
     let vulture = Entity::new(Rect {
-        x: screen_width() * 3.0,
-        y: FLYING_START_POS + GROUND,
+        x: screen_width() * 4.0,
+        y: flying_start_position,
         w: ORIGINAL_SPRITE_SIZE / 2.0,
         h: ORIGINAL_SPRITE_SIZE / 2.0,
     })
     .with_sprite(3)
     .with_tag(Tag::Enemy);
 
-    let world = World::new()
+    let mut world = World::new()
         .add_sprite(Sprite {
             texture,
             sprite,
@@ -283,12 +338,15 @@ async fn main() {
         .spawn(snake)
         .spawn(vulture);
 
+    world.insert_resource(EnemyManager { active_enemy: None });
+
     let mut game = Game::new(world)
         .with_update_systems(vec![
             gravity_system,
             move_enemy_system,
             collision_system,
             attack_system,
+            enemy_spawn_system,
         ])
         .with_render_systems(vec![render_sprites, ui_system]);
 

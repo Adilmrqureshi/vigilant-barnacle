@@ -1,0 +1,3016 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.github/
+  workflows/
+    deploy.yml
+    test.yml
+games/
+  avoider/
+    assets/
+      1.png
+      2.png
+      3.png
+      4.png
+      5.png
+      boy_attack.png
+      Boy_death.png
+      Boy_hurt.png
+      boy_walk.png
+      snake_walk.png
+      vulture_walk.png
+    src/
+      background.rs
+      main.rs
+      tests.rs
+    Cargo.toml
+  dodger/
+    assets/
+      license.txt
+    src/
+      main.rs
+    Cargo.toml
+  jumper/
+    assets/
+      license.txt
+    src/
+      main.rs
+    Cargo.toml
+  shooter/
+    assets/
+      8bit-spaceshooter.ogg
+      atari_games.ttf
+      button_background.png
+      button_clicked_background.png
+      enemy-big.png
+      enemy-medium.png
+      enemy-small.png
+      explosion.png
+      explosion.wav
+      laser-bolts.png
+      laser.wav
+      README.md
+      ship.png
+      starfield-shader.glsl
+      window_background.png
+    src/
+      assets/
+        starfield-shader.glsl
+      main.rs
+    Cargo.toml
+local/
+  assets/
+    assets/
+      1.png
+      2.png
+      3.png
+      4.png
+      5.png
+      Boy_attack.png
+      Boy_death.png
+      Boy_hurt.png
+      boy_walk.png
+      snake_walk.png
+      vulture_walk.png
+    1.png
+    2.png
+    3.png
+    4.png
+    5.png
+    boy_attack.png
+    Boy_death.png
+    Boy_hurt.png
+    boy_walk.png
+    snake_walk.png
+  avoider.wasm
+  index.html
+  jumper.wasm
+  local.sh
+shared/
+  src/
+    components.rs
+    entity.rs
+    lib.rs
+    systems.rs
+    tests.rs
+    ui.rs
+    utils.rs
+  Cargo.toml
+shared_v2/
+  src/
+    lib.rs
+    tests.rs
+  Cargo.toml
+web/
+  assets/
+    desert-runner.png
+    shooter.png
+    square-dodger.png
+    yellow-jumper.png
+  index.html
+  styles.css
+  template.txt
+.gitignore
+Cargo.toml
+README.md
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path=".github/workflows/test.yml">
+name: Run tests
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:  
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - run: cargo test --all-features
+</file>
+
+<file path="games/avoider/Cargo.toml">
+[package]
+name = "avoider"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+macroquad = "0.4"
+shared_v2 = { path = "../../shared_v2" }
+</file>
+
+<file path="games/dodger/assets/license.txt">
+
+</file>
+
+<file path="games/jumper/assets/license.txt">
+
+</file>
+
+<file path="games/jumper/Cargo.toml">
+[package]
+name = "jumper"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+macroquad = "0.4"
+shared = { path = "../../shared" }
+</file>
+
+<file path="games/shooter/assets/starfield-shader.glsl">
+#version 100
+
+// Starfield Tutorial by Martijn Steinrucken aka BigWings - 2020
+// countfrolic@gmail.com
+// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+// From The Art of Code: https://www.youtube.com/watch?v=rvDo9LvfoVE
+
+precision highp float;
+
+varying vec4 color;
+varying vec2 uv;
+varying float iTime;
+
+uniform vec2 iResolution;
+uniform float direction_modifier;
+
+#define NUM_LAYERS 4.
+
+mat2 Rot(float a) {
+    float s = sin(a), c = cos(a);
+    return mat2(c, -s, s, c);
+}
+
+float Star(vec2 uv, float flare) {
+    float d = length(uv);
+    float m = .05 / d;
+
+    float rays = max(0., 1. - abs(uv.x * uv.y * 1000.));
+    m += rays * flare;
+    uv *= Rot(3.1415 / 4.);
+    rays = max(0., 1. - abs(uv.x * uv.y * 1000.));
+    m += rays * .3 * flare;
+
+    m *= smoothstep(1., .2, d);
+
+    return m;
+}
+
+float Hash21(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+}
+
+vec3 StarLayer(vec2 uv) {
+    vec3 col = vec3(0);
+
+    vec2 gv = fract(uv) - .5;
+    vec2 id = floor(uv);
+
+    float t = iTime * 0.1;
+    for (int y = -1; y <= 1; y++) {
+        for (int x = -1; x <= 1; x++) {
+            vec2 offs = vec2(x, y);
+
+            float n = Hash21(id + offs); // random between 0 and 1
+            float size = fract(n * 345.32);
+            float star = Star(gv - offs - vec2(n, fract(n * 42.)) + .5, smoothstep(.9, 1., size) * .6);
+            vec3 color = sin(vec3(.8, .8, .8) * fract(n * 2345.2) * 123.2) * .5 + .5;
+            color = color * vec3(0.25, 0.25, 0.20);
+            star *= sin(iTime * 3. + n * 6.2831) * .5 + 1.;
+            col += star * size * color;
+        }
+    }
+    return col;
+}
+
+void main()
+{
+    vec2 uv = (gl_FragCoord.xy - .5 * iResolution.xy) / iResolution.y;
+    float t = iTime * .02;
+
+    float speed = 3.0;
+    vec2 direction = vec2(-0.25 + direction_modifier, -1.0) * speed;
+
+    uv += direction;
+    vec3 col = vec3(0);
+
+    for (float i = 0.; i < 1.; i += 1. / NUM_LAYERS) {
+        float depth = fract(i+t);
+        float scale = mix(20., .5, depth);
+        float fade = depth * smoothstep(1., .9, depth);
+        col += StarLayer(uv * scale + i * 453.2) * fade;
+    }
+
+    gl_FragColor = vec4(col, 1.0);
+}
+</file>
+
+<file path="games/shooter/src/assets/starfield-shader.glsl">
+#version 100
+
+// Starfield Tutorial by Martijn Steinrucken aka BigWings - 2020
+// countfrolic@gmail.com
+// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+// From The Art of Code: https://www.youtube.com/watch?v=rvDo9LvfoVE
+
+precision highp float;
+
+varying vec4 color;
+varying vec2 uv;
+varying float iTime;
+
+uniform vec2 iResolution;
+uniform float direction_modifier;
+
+#define NUM_LAYERS 4.
+
+mat2 Rot(float a) {
+    float s = sin(a), c = cos(a);
+    return mat2(c, -s, s, c);
+}
+
+float Star(vec2 uv, float flare) {
+    float d = length(uv);
+    float m = .05 / d;
+
+    float rays = max(0., 1. - abs(uv.x * uv.y * 1000.));
+    m += rays * flare;
+    uv *= Rot(3.1415 / 4.);
+    rays = max(0., 1. - abs(uv.x * uv.y * 1000.));
+    m += rays * .3 * flare;
+
+    m *= smoothstep(1., .2, d);
+
+    return m;
+}
+
+float Hash21(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+}
+
+vec3 StarLayer(vec2 uv) {
+    vec3 col = vec3(0);
+
+    vec2 gv = fract(uv) - .5;
+    vec2 id = floor(uv);
+
+    float t = iTime * 0.1;
+    for (int y = -1; y <= 1; y++) {
+        for (int x = -1; x <= 1; x++) {
+            vec2 offs = vec2(x, y);
+
+            float n = Hash21(id + offs); // random between 0 and 1
+            float size = fract(n * 345.32);
+            float star = Star(gv - offs - vec2(n, fract(n * 42.)) + .5, smoothstep(.9, 1., size) * .6);
+            vec3 color = sin(vec3(.8, .8, .8) * fract(n * 2345.2) * 123.2) * .5 + .5;
+            color = color * vec3(0.25, 0.25, 0.20);
+            star *= sin(iTime * 3. + n * 6.2831) * .5 + 1.;
+            col += star * size * color;
+        }
+    }
+    return col;
+}
+
+void main()
+{
+    vec2 uv = (gl_FragCoord.xy - .5 * iResolution.xy) / iResolution.y;
+    float t = iTime * .02;
+
+    float speed = 3.0;
+    vec2 direction = vec2(-0.25 + direction_modifier, -1.0) * speed;
+
+    uv += direction;
+    vec3 col = vec3(0);
+
+    for (float i = 0.; i < 1.; i += 1. / NUM_LAYERS) {
+        float depth = fract(i+t);
+        float scale = mix(20., .5, depth);
+        float fade = depth * smoothstep(1., .9, depth);
+        col += StarLayer(uv * scale + i * 453.2) * fade;
+    }
+
+    gl_FragColor = vec4(col, 1.0);
+}
+</file>
+
+<file path="local/index.html">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>My Game</title>
+    <style>
+        html,
+        body,
+        canvas {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: absolute;
+            background: black;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="glcanvas" tabindex='1'></canvas>
+    <!-- Minified and statically hosted version of https://github.com/not-fl3/macroquad/blob/master/js/mq_js_bundle.js -->
+    <script src="https://not-fl3.github.io/miniquad-samples/mq_js_bundle.js"></script>
+    <script>load("avoider.wasm");</script>
+</body>
+</html>
+</file>
+
+<file path="shared/src/ui.rs">
+use macroquad::{camera::set_default_camera, color::Color, text::draw_text};
+
+use crate::{Transform, World};
+
+pub fn render_text(world: &mut World, text: &str, font_size: f32, pos: &Transform, color: Color) {
+    set_default_camera();
+    draw_text(text, pos.x, pos.y, font_size, color);
+    world.set_default_origin();
+}
+</file>
+
+<file path="shared/src/utils.rs">
+use macroquad::{color::WHITE, shapes::draw_rectangle_lines};
+
+use crate::Entity;
+
+pub fn debug(entities: &[Entity]) {
+    for e in entities {
+        draw_rectangle_lines(
+            e.transform.x,
+            e.transform.y,
+            e.transform.w,
+            e.transform.h,
+            2.0,
+            WHITE,
+        );
+    }
+}
+</file>
+
+<file path="shared_v2/Cargo.toml">
+[package]
+name = "shared_v2"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+macroquad = "0.4"
+</file>
+
+<file path=".gitignore">
+/target
+</file>
+
+<file path="README.md">
+```
+cargo build --release --target wasm32-unknown-unknown
+```
+</file>
+
+<file path="games/dodger/Cargo.toml">
+[package]
+name = "dodger"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+macroquad = "0.4"
+shared = { path = "../../shared" }
+</file>
+
+<file path="games/shooter/assets/README.md">
+## Asset credits
+
+### Sprites
+
+**Space Ship Shooter Pixel Art Assets**  
+Author: ansimuz  
+License: CC0 Public Domain  
+<https://opengameart.org/content/space-ship-shooter-pixel-art-assets>
+
+### Theme music
+
+**8-bit space shooter music**  
+Author: HydroGene  
+License: CC0 Public Domain  
+<https://opengameart.org/content/8-bit-epic-space-shooter-music>
+
+### Laser and explosion sounds
+
+**Sci-fi sounds**  
+Author: Kenney.nl  
+License: CC0 Public Domain  
+<https://opengameart.org/content/sci-fi-sounds>
+
+### UI
+
+**Sci-fi User Interface Elements**  
+Author: Buch  
+License: CC0 Public Domain  
+sci-fi-ui.psd  
+<https://opengameart.org/content/sci-fi-user-interface-elements>
+
+### Font
+
+**AtariGames**   
+Author: Kieran  
+License: Public Domain  
+<https://nimblebeastscollective.itch.io/nb-pixel-font-bundle>
+</file>
+
+<file path="local/local.sh">
+#!/usr/bin/env bash
+
+cp "../target/wasm32-unknown-unknown/release/$1.wasm" "./$1.wasm"
+cp -r "../games/$1/assets" "./assets"
+sed -i "s/load(\".*\")/load(\"$1.wasm\")/g" ./index.html 
+simple-http-server
+</file>
+
+<file path="shared/src/components.rs">
+use macroquad::color::Color;
+
+#[derive(Debug)]
+pub struct Input {
+    pub dt: f32,
+    pub is_jump: bool,
+}
+
+#[derive(Debug)]
+pub struct Transform {
+    pub x: f32,
+    pub y: f32,
+}
+
+#[derive(Debug)]
+pub struct Velocity {
+    pub x: f32,
+    pub y: f32,
+}
+
+#[derive(Debug)]
+pub struct Jump {
+    pub force: f32,
+    pub ground_level: f32,
+    pub gravity: f32,
+    pub velocity: Velocity,
+}
+
+#[derive(Debug)]
+pub struct Collide {
+    pub is_collided: bool,
+}
+
+#[derive(Debug)]
+pub struct Movement {
+    pub velocity: Velocity,
+}
+
+#[derive(Debug)]
+pub struct Shape {
+    pub w: f32,
+    pub h: f32,
+}
+
+#[derive(Debug)]
+pub struct Render {
+    pub shape: Shape,
+    pub color: Color,
+}
+</file>
+
+<file path="shared/Cargo.toml">
+[package]
+name = "shared"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+macroquad = "0.4.14"
+</file>
+
+<file path="shared_v2/src/tests.rs">
+#[cfg(test)]
+mod tests {
+
+    // -----------------------------
+    // Helpers
+    // -----------------------------
+
+    use crate::*;
+
+    fn make_entity(tag: Tag) -> Entity {
+        Entity::new(Rect {
+            x: 0.0,
+            y: 0.0,
+            w: 10.0,
+            h: 10.0,
+        })
+        .with_tag(tag)
+    }
+
+    // -----------------------------
+    // Entity Tests
+    // -----------------------------
+
+    #[test]
+    fn entity_builder_sets_fields() {
+        let e = Entity::new(Rect {
+            x: 1.0,
+            y: 2.0,
+            w: 3.0,
+            h: 4.0,
+        })
+        .with_tag(Tag::Player)
+        .with_render(WHITE)
+        .with_physics(Physics::new())
+        .with_sprite(5)
+        .with_attack(10);
+
+        assert_eq!(e.tag, Some(Tag::Player));
+        assert!(e.render.is_some());
+        assert!(e.physics.is_some());
+        assert_eq!(e.current_sprite, Some(5));
+        assert_eq!(e.original_sprite, Some(5));
+        assert!(e.attack.is_some());
+    }
+
+    // -----------------------------
+    // World Tests
+    // -----------------------------
+
+    #[test]
+    fn world_spawns_entities() {
+        let world = World::new()
+            .spawn(make_entity(Tag::Player))
+            .spawn(make_entity(Tag::Enemy));
+
+        assert_eq!(world.entities.len(), 2);
+    }
+
+    #[test]
+    fn with_tag_filters_correctly() {
+        let world = World::new()
+            .spawn(make_entity(Tag::Player))
+            .spawn(make_entity(Tag::Enemy))
+            .spawn(make_entity(Tag::Enemy));
+
+        let enemies: Vec<_> = world.with_tag(Tag::Enemy).collect();
+
+        assert_eq!(enemies.len(), 2);
+    }
+
+    #[test]
+    fn with_tag_mut_allows_modification() {
+        let mut world = World::new()
+            .spawn(make_entity(Tag::Enemy))
+            .spawn(make_entity(Tag::Enemy));
+
+        for e in world.with_tag_mut(Tag::Enemy) {
+            e.transform.x = 42.0;
+        }
+
+        for e in world.with_tag(Tag::Enemy) {
+            assert_eq!(e.transform.x, 42.0);
+        }
+    }
+
+    // -----------------------------
+    // Resource Tests
+    // -----------------------------
+
+    #[test]
+    fn insert_and_get_resource() {
+        let mut world = World::new();
+
+        world.insert_resource(EnemyManager {
+            active_enemy: Some(3),
+        });
+
+        let res = world.get_resource::<EnemyManager>().unwrap();
+
+        assert_eq!(res.active_enemy, Some(3));
+    }
+
+    #[test]
+    fn get_resource_mut_updates_value() {
+        let mut world = World::new();
+
+        world.insert_resource(EnemyManager {
+            active_enemy: None,
+        });
+
+        {
+            let res = world.get_resource_mut::<EnemyManager>().unwrap();
+            res.active_enemy = Some(99);
+        }
+
+        let res = world.get_resource::<EnemyManager>().unwrap();
+        assert_eq!(res.active_enemy, Some(99));
+    }
+
+    #[test]
+    fn missing_resource_returns_none() {
+        let world = World::new();
+
+        let res = world.get_resource::<EnemyManager>();
+
+        assert!(res.is_none());
+    }
+
+    // -----------------------------
+    // Physics Tests
+    // -----------------------------
+
+    #[test]
+    fn physics_initial_state() {
+        let p = Physics::new();
+
+        assert!(p.is_grounded);
+        assert_eq!(p.velocity.x, 0.0);
+        assert_eq!(p.velocity.y, 0.0);
+    }
+
+    // -----------------------------
+    // Systems Tests
+    // -----------------------------
+
+    fn dummy_system(world: &mut World, state: &mut GameState, _input: &Input) {
+        world.entities.push(Entity::new(Rect {
+            x: 1.0,
+            y: 1.0,
+            w: 1.0,
+            h: 1.0,
+        }));
+
+        state.score += 1.0;
+    }
+
+    fn dummy_render(_world: &World, state: &GameState) {
+        assert!(state.score >= 0.0);
+    }
+
+    #[test]
+    fn game_update_runs_systems() {
+        let world = World::new();
+        let mut game = Game::new(world).with_update_system(dummy_system);
+
+        let input = Input {
+            dt: 0.016,
+            spacebar: false,
+            a: false,
+        };
+
+        game.update(&input);
+
+        assert_eq!(game.world.entities.len(), 1);
+        assert_eq!(game.state.score, 1.0);
+    }
+
+    #[test]
+    fn game_render_runs_render_systems() {
+        let world = World::new();
+        let game = Game::new(world).with_render_system(dummy_render);
+
+        // Just ensures no panic
+        game.render();
+    }
+
+    #[test]
+    fn multiple_systems_run_in_order() {
+        fn system_a(_w: &mut World, s: &mut GameState, _i: &Input) {
+            s.score += 1.0;
+        }
+
+        fn system_b(_w: &mut World, s: &mut GameState, _i: &Input) {
+            s.score *= 2.0;
+        }
+
+        let world = World::new();
+        let mut game = Game::new(world)
+            .with_update_system(system_a)
+            .with_update_system(system_b);
+
+        let input = Input {
+            dt: 0.016,
+            spacebar: false,
+            a: false,
+        };
+
+        game.update(&input);
+
+        // (0 + 1) * 2 = 2
+        assert_eq!(game.state.score, 2.0);
+    }
+}
+</file>
+
+<file path="games/avoider/src/tests.rs">
+#[cfg(test)]
+mod tests {
+    use macroquad::math::Rect;
+use shared_v2::{EnemyManager, Entity, GameState, Input, Physics, Tag, World};
+
+use crate::{DEFAULT_PLAYER_POSITION, GAME_SPRITE_SIZE, GROUND, collision_system, enemy_spawn_system, gravity_system, move_enemy_system};
+
+use super::*;
+
+// -----------------------------
+// Helpers
+// -----------------------------
+
+fn dummy_input() -> Input {
+    Input {
+        dt: 1.0 / 60.0,
+        spacebar: false,
+        a: false,
+    }
+}
+
+fn player_entity() -> Entity {
+    Entity::new(Rect {
+        x: DEFAULT_PLAYER_POSITION,
+        y: GROUND,
+        w: GAME_SPRITE_SIZE,
+        h: GAME_SPRITE_SIZE,
+    })
+    .with_tag(Tag::Player)
+    .with_physics(Physics::new())
+}
+
+fn enemy_entity(x: f32) -> Entity {
+    Entity::new(Rect {
+        x,
+        y: GROUND,
+        w: GAME_SPRITE_SIZE,
+        h: GAME_SPRITE_SIZE,
+    })
+    .with_tag(Tag::Enemy)
+}
+
+fn world_with_manager() -> World {
+    let mut world = World::new();
+    world.insert_resource(EnemyManager { active_enemy: None });
+    world
+}
+
+// -----------------------------
+// Gravity Tests
+// -----------------------------
+
+#[test]
+fn jump_sets_positive_velocity() {
+    let mut world = World::new().spawn(player_entity());
+    let mut state = GameState::new();
+
+    let input = Input {
+        dt: 0.016,
+        spacebar: true,
+        a: false,
+    };
+
+    gravity_system(&mut world, &mut state, &input);
+
+    let vel = world.entities[0]
+        .physics
+        .as_ref()
+        .unwrap()
+        .velocity
+        .y;
+
+    assert!(vel > 0.0);
+}
+
+#[test]
+fn gravity_pulls_down_when_airborne() {
+    let mut p = player_entity();
+    p.physics.as_mut().unwrap().is_grounded = false;
+    p.physics.as_mut().unwrap().velocity.y = 0.0;
+
+    let mut world = World::new().spawn(p);
+    let mut state = GameState::new();
+
+    gravity_system(&mut world, &mut state, &dummy_input());
+
+    let vel = world.entities[0]
+        .physics
+        .as_ref()
+        .unwrap()
+        .velocity
+        .y;
+
+    assert!(vel < 0.0);
+}
+
+#[test]
+fn player_lands_on_ground() {
+    let mut p = player_entity();
+    p.transform.y = GROUND - 10.0;
+    p.physics.as_mut().unwrap().is_grounded = false;
+
+    let mut world = World::new().spawn(p);
+    let mut state = GameState::new();
+
+    gravity_system(&mut world, &mut state, &dummy_input());
+
+    let player = &world.entities[0];
+
+    assert_eq!(player.transform.y, GROUND);
+    assert!(player.physics.as_ref().unwrap().is_grounded);
+}
+
+// -----------------------------
+// Movement Tests
+// -----------------------------
+//
+// #[test]
+// fn enemies_move_left() {
+//     let mut world = World::new().spawn(enemy_entity(500.0));
+//     let mut state = GameState::new();
+//
+//     let input = Input {
+//         dt: 1.0,
+//         spacebar: false,
+//         a: false,
+//     };
+//
+//     move_enemy_system(&mut world, &mut state, &input);
+//
+//     assert!(world.entities[0].transform.x < 500.0);
+// }
+//
+// -----------------------------
+// Collision Tests
+// -----------------------------
+
+#[test]
+fn collision_triggers_game_over() {
+    let player = player_entity();
+    let enemy = enemy_entity(DEFAULT_PLAYER_POSITION);
+
+    let mut world = World::new().spawn(player).spawn(enemy);
+    let mut state = GameState::new();
+
+    collision_system(&mut world, &mut state, &dummy_input());
+
+    assert!(state.game_over);
+}
+
+// -----------------------------
+// Enemy Spawn Tests
+// -----------------------------
+
+// #[test]
+// fn spawns_enemy_when_none_active() {
+//     let mut world = world_with_manager()
+//         .spawn(enemy_entity(-1000.0))
+//         .spawn(enemy_entity(-2000.0));
+//
+//     let mut state = GameState::new();
+//
+//     enemy_spawn_system(&mut world, &mut state, &dummy_input());
+//
+//     let manager = world.get_resource::<EnemyManager>().unwrap();
+//     assert!(manager.active_enemy.is_some());
+// }
+
+// #[test]
+// fn does_not_spawn_if_enemy_still_visible() {
+//     let mut world = world_with_manager().spawn(enemy_entity(100.0));
+//
+//     {
+//         let mgr = world.get_resource_mut::<EnemyManager>().unwrap();
+//         mgr.active_enemy = Some(0);
+//     }
+//
+//     let mut state = GameState::new();
+//
+//     enemy_spawn_system(&mut world, &mut state, &dummy_input());
+//
+//     let mgr = world.get_resource::<EnemyManager>().unwrap();
+//     assert_eq!(mgr.active_enemy, Some(0));
+// }
+//
+// #[test]
+// fn respawns_when_enemy_leaves_screen() {
+//     let mut world = world_with_manager()
+//         .spawn(enemy_entity(-500.0))
+//         .spawn(enemy_entity(-600.0));
+//
+//     {
+//         let mgr = world.get_resource_mut::<EnemyManager>().unwrap();
+//         mgr.active_enemy = Some(0);
+//     }
+//
+//     let mut state = GameState::new();
+//
+//     enemy_spawn_system(&mut world, &mut state, &dummy_input());
+//
+//     let mgr = world.get_resource::<EnemyManager>().unwrap();
+//     assert!(mgr.active_enemy.is_some());
+// }
+}
+</file>
+
+<file path="games/dodger/src/main.rs">
+use macroquad::prelude::*;
+
+const MOVEMENT_SPEED: f32 = 200.0;
+const RADIUS: f32 = 16.0;
+
+struct Shape {
+    size: f32,
+    speed: f32,
+    x: f32,
+    y: f32,
+    hit: bool,
+}
+
+impl Shape {
+    fn collides_with(&self, other: &Self) -> bool {
+        self.rect().overlaps(&other.rect())
+    }
+
+    fn rect(&self) -> Rect {
+        Rect {
+            x: self.x - self.size / 2.0,
+            y: self.y - self.size / 2.0,
+            w: self.size,
+            h: self.size,
+        }
+    }
+}
+
+#[macroquad::main("My game")]
+async fn main() {
+    rand::srand(miniquad::date::now() as u64);
+    let mut gameover = false;
+    let screen_boundary_x = screen_width() - RADIUS;
+    let screen_boundary_y = screen_height() - RADIUS;
+    let mut squares: Vec<Shape> = vec![];
+    let mut bullets: Vec<Shape> = vec![];
+    let mut circle = Shape {
+        size: 32.0,
+        speed: MOVEMENT_SPEED,
+        x: screen_width() / 2.0,
+        y: screen_height() / 2.0,
+        hit: false,
+    };
+
+    loop {
+        clear_background(DARKPURPLE);
+
+        let delta_time = get_frame_time();
+        if !gameover {
+            if is_key_down(KeyCode::Right) {
+                circle.x += MOVEMENT_SPEED * delta_time;
+            }
+            if is_key_down(KeyCode::Left) {
+                circle.x -= MOVEMENT_SPEED * delta_time;
+            }
+            if is_key_down(KeyCode::Down) {
+                circle.y += MOVEMENT_SPEED * delta_time;
+            }
+            if is_key_down(KeyCode::Up) {
+                circle.y -= MOVEMENT_SPEED * delta_time;
+            }
+            if is_key_pressed(KeyCode::Space) {
+                bullets.push(Shape {
+                    x: circle.x,
+                    y: circle.y,
+                    speed: circle.speed * 2.0,
+                    size: 5.0,
+                    hit: false,
+                })
+            }
+            circle.x = clamp(circle.x, circle.size / 2.0, screen_boundary_x);
+            circle.y = clamp(circle.y, circle.size / 2.0, screen_boundary_y);
+
+            if rand::gen_range(0, 99) >= 95 {
+                let size = rand::gen_range(16.0, 64.0);
+                squares.push(Shape {
+                    size,
+                    speed: rand::gen_range(50.0, 150.0),
+                    x: rand::gen_range(size / 2.0, screen_width() - size / 2.0),
+                    y: -size,
+                    hit: false,
+                });
+            }
+            for square in &mut squares {
+                square.y += square.speed * delta_time;
+            }
+            for bullet in &mut bullets {
+                bullet.y -= bullet.speed * delta_time;
+            }
+            if squares.iter().any(|square| circle.collides_with(square)) {
+                gameover = true;
+            }
+            for bullet in bullets.iter_mut() {
+                for square in squares.iter_mut() {
+                    if bullet.collides_with(square) {
+                        bullet.hit = true;
+                        square.hit = true;
+                    }
+                }
+            }
+        }
+
+        squares.retain(|square| square.y < screen_height() + square.size);
+        bullets.retain(|bullet| bullet.y > 0.0);
+
+        squares.retain(|square| !square.hit);
+        bullets.retain(|bullet| !bullet.hit);
+
+        for square in &squares {
+            draw_rectangle(
+                square.x - square.size / 2.0,
+                square.y - square.size / 2.0,
+                square.size,
+                square.size,
+                GREEN,
+            );
+        }
+        for bullet in &bullets {
+            draw_circle(bullet.x, bullet.y, bullet.size, BLUE)
+        }
+        draw_circle(circle.x, circle.y, circle.size / 2.0, YELLOW);
+
+        if gameover {
+            let text = "GAME OVER!";
+            let text_dimensions = measure_text(text, None, 50, 1.0);
+            draw_text(
+                text,
+                screen_width() / 2.0 - text_dimensions.width / 2.0,
+                screen_height() / 2.0 - text_dimensions.height / 2.0,
+                50.0,
+                RED,
+            );
+            if is_key_pressed(KeyCode::Space) {
+                squares.clear();
+                bullets.clear();
+                circle.x = screen_width() / 2.0;
+                circle.y = screen_height() / 2.0;
+                gameover = false;
+            }
+        }
+
+        next_frame().await
+    }
+}
+</file>
+
+<file path="games/shooter/Cargo.toml">
+[package]
+name = "shooter"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+macroquad = "0.4"
+shared = { path = "../../shared" }
+
+[profile.dev.package.'*']
+opt-level = 3
+</file>
+
+<file path="shared/src/systems.rs">
+use macroquad::shapes::draw_rectangle;
+
+use crate::*;
+
+pub fn movement_system(entities: &mut [Entity], input: &components::Input) {
+    for entity in entities {
+        let Some(ref movement) = entity.movement else {
+            continue;
+        };
+        let should_not_move = matches!(entity.collide, Some(ref c) if c.is_collided);
+
+        if !should_not_move {
+            entity.transform.x += movement.velocity.x * input.dt;
+            entity.transform.y += movement.velocity.y * input.dt;
+        };
+    }
+}
+
+pub fn collide_system(entities: &mut [Entity]) {
+    let len = entities.len();
+
+    for i in 0..len {
+        for j in i + 1..len {
+            let (a, b) = {
+                let (left, right) = entities.split_at_mut(j);
+                (&mut left[i], &mut right[0])
+            };
+
+            let Some(ref mut col_1) = a.collide else {
+                continue;
+            };
+            let Some(ref mut col_2) = b.collide else {
+                continue;
+            };
+            col_1.is_collided = false;
+            col_2.is_collided = false;
+
+            if a.transform.overlaps(&b.transform) {
+                col_1.is_collided = true;
+                col_2.is_collided = true;
+            }
+        }
+    }
+}
+
+pub fn render_system(entities: &[Entity]) {
+    for entity in entities {
+        let Some(render) = &entity.render else {
+            continue;
+        };
+
+        draw_rectangle(
+            entity.transform.x,
+            entity.transform.y,
+            render.shape.w,
+            render.shape.h,
+            render.color,
+        )
+    }
+}
+
+pub fn jump_system(entities: &mut [Entity], input: &components::Input) {
+    for entity in entities {
+        let Some(jump) = &mut entity.jump else {
+            continue;
+        };
+
+        if entity.transform.y <= jump.ground_level {
+            if input.is_jump {
+                jump.velocity.y = jump.force;
+            } else {
+                jump.velocity.y = 0.0;
+            }
+        } else if entity.transform.y > jump.ground_level {
+            jump.velocity.y -= jump.gravity * input.dt;
+        }
+        entity.transform.x += jump.velocity.x * input.dt;
+        entity.transform.y += jump.velocity.y * input.dt;
+    }
+}
+</file>
+
+<file path="shared/src/tests.rs">
+#[cfg(test)]
+mod test {
+    use crate::*;
+
+    #[test]
+    fn movement_moves_entity_when_not_colliding() {
+        let mut entities = vec![Entity::new(1, 0.0, 0.0).with_move(10.0, 0.0)];
+
+        let input = components::Input {
+            dt: 1.0,
+            is_jump: false,
+        };
+
+        movement_system(&mut entities, &input);
+
+        assert_eq!(entities[0].transform.x, 10.0);
+        assert_eq!(entities[0].transform.y, 0.0);
+    }
+
+    #[test]
+    fn movement_stops_when_collided() {
+        let mut entity = Entity::new(1, 0.0, 0.0).with_move(10.0, 0.0).with_collide();
+
+        entity.collide.as_mut().unwrap().is_collided = true;
+
+        let mut entities = vec![entity];
+        let input = components::Input {
+            dt: 1.0,
+            is_jump: false,
+        };
+
+        movement_system(&mut entities, &input);
+
+        assert_eq!(entities[0].transform.x, 0.0);
+    }
+
+    #[test]
+    fn jump_applies_force_when_grounded() {
+        let mut entities = vec![Entity::new(1, 0.0, 100.0).with_jump(300.0, 100.0)];
+
+        let input = components::Input {
+            dt: 1.0,
+            is_jump: true,
+        };
+
+        jump_system(&mut entities, &input);
+
+        assert!(entities[0].transform.y > 100.0);
+    }
+
+    #[test]
+    fn gravity_applies_when_airborne() {
+        let mut entity = Entity::new(1, 0.0, 90.0).with_jump(300.0, 100.0);
+
+        // Simulate upward velocity
+        entity.jump.as_mut().unwrap().velocity.y = 100.0;
+
+        let mut entities = vec![entity];
+        let input = components::Input {
+            dt: 1.0,
+            is_jump: false,
+        };
+
+        jump_system(&mut entities, &input);
+
+        let jump = entities[0].jump.as_ref().unwrap();
+        assert!(jump.velocity.y < 100.0);
+    }
+
+    #[test]
+    fn collision_detects_overlap() {
+        let mut entities = vec![
+            Entity::new(1, 0.0, 0.0).with_collide(),
+            Entity::new(2, 32.0, 32.0).with_collide(), // overlaps 64x64
+                                                       //
+        ];
+
+        collide_system(&mut entities);
+
+        assert!(entities[0].collide.as_ref().unwrap().is_collided);
+        assert!(entities[1].collide.as_ref().unwrap().is_collided);
+    }
+
+    #[test]
+    fn collision_not_detected_when_separated() {
+        let mut entities = vec![
+            Entity::new(1, 0.0, 0.0).with_collide(),
+            Entity::new(2, 200.0, 200.0).with_collide(),
+        ];
+
+        collide_system(&mut entities);
+
+        assert!(!entities[0].collide.as_ref().unwrap().is_collided);
+        assert!(!entities[1].collide.as_ref().unwrap().is_collided);
+    }
+
+    #[test]
+    fn world_update_runs_all_systems() {
+        let mut world = World::new();
+
+        world.spawn(
+            Entity::new(1, 0.0, 100.0)
+                .with_jump(200.0, 100.0)
+                .with_move(10.0, 0.0)
+                .with_collide(),
+        );
+
+        let input = components::Input {
+            dt: 1.0,
+            is_jump: true,
+        };
+
+        world.update(&input);
+
+        let e = &world.entities[0];
+        assert!(e.transform.x > 0.0);
+        assert!(e.transform.y > 100.0);
+    }
+}
+</file>
+
+<file path="web/template.txt">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>My Game</title>
+    <style>
+        html,
+        body,
+        canvas {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: absolute;
+            background: black;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="glcanvas" tabindex='1'></canvas>
+    <!-- Minified and statically hosted version of https://github.com/not-fl3/macroquad/blob/master/js/mq_js_bundle.js -->
+</file>
+
+<file path="Cargo.toml">
+[workspace]
+name = "my-game"
+version = "0.0.1"
+resolver = "3"
+members = ["games/*", "shared", "shared_v2"]
+</file>
+
+<file path="games/avoider/src/background.rs">
+use macroquad::prelude::*;
+
+// let texture_1: Texture2D = load_texture("1.png").await.expect("Couldn't load file");
+// texture_1.set_filter(FilterMode::Nearest);
+// let texture_2: Texture2D = load_texture("2.png").await.expect("Couldn't load file");
+// texture_2.set_filter(FilterMode::Nearest);
+// let texture_3: Texture2D = load_texture("3.png").await.expect("Couldn't load file");
+// texture_3.set_filter(FilterMode::Nearest);
+// let texture_4: Texture2D = load_texture("4.png").await.expect("Couldn't load file");
+// texture_4.set_filter(FilterMode::Nearest);
+// let texture_5: Texture2D = load_texture("5.png").await.expect("Couldn't load file");
+// texture_5.set_filter(FilterMode::Nearest);
+// Parallex(
+//     Tick {
+//         texture: texture_1,
+//         tick: 0.0,
+//     },
+//     Tick {
+//         texture: texture_2,
+//         tick: 0.0,
+//     },
+//     Tick {
+//         texture: texture_3,
+//         tick: 0.0,
+//     },
+//     Tick {
+//         texture: texture_4,
+//         tick: 0.0,
+//     },
+//     Tick {
+//         texture: texture_5,
+//         tick: 0.0,
+//     },
+// )
+
+// if para.0.tick >= min_width {
+//     para.0.tick -= min_width;
+// }
+//
+// if para.1.tick >= min_width {
+//     para.1.tick -= min_width;
+// }
+//
+// if para.2.tick >= min_width {
+//     para.2.tick -= min_width;
+// }
+//
+// if para.3.tick >= min_width {
+//     para.3.tick -= min_width;
+// }
+//
+// if para.4.tick >= min_width {
+//     para.4.tick -= min_width;
+// }
+
+// if !game_over {
+//     para.0.tick += time * 3.0;
+//     para.1.tick += time * 9.0;
+//     para.2.tick += time * 27.0;
+//     para.3.tick += time * 81.0;
+//     para.4.tick += time * 243.0;
+// }
+
+struct Layer {
+    pub texture: Texture2D,
+    pub delta: f32,
+    pub speed: i32,
+}
+pub struct Parallex {
+    pub layers: Vec<Layer>,
+}
+
+pub async fn load_background_assets() -> Parallex {
+    let files = ["1.png", "2.png", "3.png", "4.png", "5.png"];
+    let speeds = [3, 9, 27, 81, 243];
+    let mut para = Parallex { layers: vec![] };
+
+    for (file, speed) in files.iter().zip(speeds) {
+        let texture: Texture2D = load_texture(file).await.expect("Couldn't load file");
+        texture.set_filter(FilterMode::Nearest);
+
+        let layer = Layer {
+            texture,
+            delta: 0.0,
+            speed,
+        };
+
+        para.layers.push(layer);
+    }
+
+    para
+}
+
+pub fn render_paralax_background(para: &mut Parallex, game_over: bool) {
+    let dt = get_frame_time() as f32;
+    let w = screen_width();
+    let h = screen_height();
+
+    for layer in &mut para.layers {
+        if layer.delta >= w {
+            layer.delta -= w;
+        }
+
+        if !game_over {
+            layer.delta += dt * layer.speed as f32;
+        }
+
+        let x1 = -layer.delta;
+        let x2 = w - layer.delta;
+
+        let params = DrawTextureParams {
+            dest_size: Some(vec2(w, h)),
+            flip_y: true,
+            ..Default::default()
+        };
+
+        draw_texture_ex(&layer.texture, x1, 0.0, WHITE, params.clone());
+        draw_texture_ex(&layer.texture, x2, 0.0, WHITE, params);
+    }
+
+    //
+    // draw_texture_ex(
+    //     &para.0.texture,
+    //     -para.0.tick,
+    //     0.0,
+    //     WHITE,
+    //     DrawTextureParams {
+    //         dest_size: Some(vec2(min_width, min_height)),
+    //         flip_y: true,
+    //         ..Default::default()
+    //     },
+    // );
+    //
+    // draw_texture_ex(
+    //     &para.0.texture,
+    //     min_width - para.0.tick,
+    //     0.0,
+    //     WHITE,
+    //     DrawTextureParams {
+    //         dest_size: Some(vec2(min_width, min_height)),
+    //         flip_y: true,
+    //         ..Default::default()
+    //     },
+    // );
+    //
+    // draw_texture_ex(
+    //     &para.1.texture,
+    //     min_width - para.1.tick,
+    //     0.0,
+    //     WHITE,
+    //     DrawTextureParams {
+    //         dest_size: Some(vec2(min_width, min_height)),
+    //         flip_y: true,
+    //         ..Default::default()
+    //     },
+    // );
+    //
+    // draw_texture_ex(
+    //     &para.1.texture,
+    //     -para.1.tick,
+    //     0.0,
+    //     WHITE,
+    //     DrawTextureParams {
+    //         dest_size: Some(vec2(min_width, min_height)),
+    //         flip_y: true,
+    //         ..Default::default()
+    //     },
+    // );
+    //
+    // draw_texture_ex(
+    //     &para.2.texture,
+    //     -para.2.tick,
+    //     0.0,
+    //     WHITE,
+    //     DrawTextureParams {
+    //         dest_size: Some(vec2(min_width, min_height)),
+    //         flip_y: true,
+    //         ..Default::default()
+    //     },
+    // );
+    //
+    // draw_texture_ex(
+    //     &para.2.texture,
+    //     min_width - para.2.tick,
+    //     0.0,
+    //     WHITE,
+    //     DrawTextureParams {
+    //         dest_size: Some(vec2(min_width, min_height)),
+    //         flip_y: true,
+    //         ..Default::default()
+    //     },
+    // );
+    //
+    // draw_texture_ex(
+    //     &para.3.texture,
+    //     -para.3.tick,
+    //     0.0,
+    //     WHITE,
+    //     DrawTextureParams {
+    //         dest_size: Some(vec2(min_width, min_height)),
+    //         flip_y: true,
+    //         ..Default::default()
+    //     },
+    // );
+    //
+    // draw_texture_ex(
+    //     &para.3.texture,
+    //     min_width - para.3.tick,
+    //     0.0,
+    //     WHITE,
+    //     DrawTextureParams {
+    //         dest_size: Some(vec2(min_width, min_height)),
+    //         flip_y: true,
+    //         ..Default::default()
+    //     },
+    // );
+    //
+    // draw_texture_ex(
+    //     &para.4.texture,
+    //     -para.4.tick,
+    //     0.0,
+    //     WHITE,
+    //     DrawTextureParams {
+    //         dest_size: Some(vec2(min_width, min_height)),
+    //         flip_y: true,
+    //         ..Default::default()
+    //     },
+    // );
+    //
+    // draw_texture_ex(
+    //     &para.4.texture,
+    //     min_width - para.4.tick,
+    //     0.0,
+    //     WHITE,
+    //     DrawTextureParams {
+    //         dest_size: Some(vec2(min_width, min_height)),
+    //         flip_y: true,
+    //         ..Default::default()
+    //     },
+    // );
+}
+</file>
+
+<file path="shared/src/entity.rs">
+use macroquad::color::Color;
+
+use crate::*;
+
+#[derive(Debug)]
+pub struct Entity {
+    pub id: i32,
+    pub transform: Rect,
+    pub default_position: Transform,
+
+    pub render: Option<components::Render>,
+    pub jump: Option<components::Jump>,
+    pub collide: Option<components::Collide>,
+    pub movement: Option<components::Movement>,
+}
+
+impl Entity {
+    pub fn new(id: i32, x: f32, y: f32) -> Self {
+        Self {
+            id,
+            jump: None,
+            collide: None,
+            render: None,
+            movement: None,
+            default_position: Transform { x, y },
+            transform: Rect {
+                x,
+                y,
+                w: 64.0,
+                h: 64.0,
+            },
+        }
+    }
+
+    pub fn is_collided(&self) -> bool {
+        let Some(ref c) = self.collide else {
+            return false;
+        };
+        println!("Hi {}", c.is_collided);
+        return c.is_collided;
+    }
+
+    pub fn set_dimensions(&mut self, w: f32, h: f32) {
+        self.transform.w = w;
+        self.transform.h = h;
+    }
+
+    pub fn reset(&mut self) {
+        let Some(ref mut c) = self.collide else {
+            return;
+        };
+        c.is_collided = false;
+        self.transform.x = self.default_position.x;
+        self.transform.y = self.default_position.y;
+    }
+
+    pub fn set_position(&mut self, x: f32, y: f32) {
+        self.transform.x = x;
+        self.transform.y = y;
+    }
+
+    pub fn with_jump(mut self, force: f32, ground_level: f32) -> Self {
+        self.jump = Some(components::Jump {
+            force,
+            // change these
+            gravity: 600.0,
+            ground_level,
+            velocity: components::Velocity { x: 0.0, y: 0.0 },
+        });
+        self
+    }
+
+    pub fn with_collide(mut self) -> Self {
+        self.collide = Some(components::Collide { is_collided: false });
+        self
+    }
+
+    pub fn with_move(mut self, x: f32, y: f32) -> Self {
+        self.movement = Some(components::Movement {
+            velocity: components::Velocity { x, y },
+        });
+        self
+    }
+
+    pub fn with_render(mut self, w: f32, h: f32, color: Color) -> Self {
+        self.render = Some(Render {
+            shape: Shape { w, h },
+            color,
+        });
+        self
+    }
+}
+</file>
+
+<file path="web/styles.css">
+body {
+  background-color: #353535;
+  color: #fff;
+  font-family: "Press Start 2P", system-ui;
+  margin: auto;
+  text-align: center;
+  padding: 72px;
+}
+
+.tile {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+  background-size: contain;
+  box-shadow: 5.3px 10.6px 10.6px hsl(0deg 0% 0% / 0.34);
+}
+
+.dodger {
+  background-image: url("./assets/square-dodger.png");
+}
+
+.dodger {
+  background-image: url("./assets/desert-runner.png");
+}
+
+.jumper {
+  background-image: url("./assets/yellow-jumper.png");
+}
+
+.shooter {
+  background-image: url("./assets/shooter.png");
+  background-size: cover;
+  background-position: center;
+}
+
+.soon {
+  background-color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+}
+
+section {
+  margin-top: 64px;
+  display: flex;
+  gap: 64px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+}
+
+.row {
+  display: flex;
+  width: 100%;
+  padding: 0 36px;
+  flex-direction: column-reverse; 
+  justify-content: center;
+  gap: 64px;
+}
+
+
+@media(min-width: 700px) {
+  .tile {
+    width: 300px;
+  }
+
+  .row {
+    flex-direction: row;
+  }
+
+  .container {
+    width: fit-content;
+  }
+}
+</file>
+
+<file path="shared_v2/src/lib.rs">
+mod tests;
+use std::{
+    any::{Any, TypeId},
+    collections::HashMap,
+    fmt::Debug,
+};
+
+use macroquad::{
+    color::{Color, WHITE},
+    math::Rect,
+    prelude::animation::AnimatedSprite,
+    shapes::draw_rectangle_lines,
+    texture::Texture2D,
+};
+
+#[derive(Debug)]
+pub struct Transform {
+    pub x: f32,
+    pub y: f32,
+}
+
+#[derive(Clone)]
+pub struct Sprite {
+    pub texture: Texture2D,
+    pub sprite: AnimatedSprite,
+    pub tag: AnimationTag,
+}
+
+#[derive(Debug)]
+pub struct Shape {
+    pub w: f32,
+    pub h: f32,
+}
+
+#[derive(Debug)]
+pub struct Render {
+    pub color: Color,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum Tag {
+    Player,
+    Enemy,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum AnimationTag {
+    Movement,
+    Attack,
+}
+
+pub struct Velocity {
+    pub x: f32,
+    pub y: f32,
+}
+
+pub struct Physics {
+    pub is_grounded: bool,
+    pub velocity: Velocity,
+}
+
+pub struct Attack {
+    pub animation: usize,
+    pub is_attacking: bool,
+}
+
+pub struct Entity {
+    pub transform: Rect,
+
+    pub tag: Option<Tag>,
+
+    pub render: Option<Render>,
+    pub current_sprite: Option<usize>,
+    pub original_sprite: Option<usize>,
+
+    pub physics: Option<Physics>,
+    pub attack: Option<Attack>,
+}
+
+pub struct World {
+    pub entities: Vec<Entity>,
+    pub sprites: Vec<Sprite>,
+    resources: HashMap<TypeId, Box<dyn Any>>,
+}
+
+pub struct GameState {
+    pub score: f32,
+    pub game_over: bool,
+}
+
+pub struct Input {
+    pub dt: f32,
+    pub spacebar: bool,
+    pub a: bool,
+}
+
+pub struct Systems {
+    pub update: Vec<fn(&mut World, &mut GameState, &Input)>,
+    pub render: Vec<fn(&World, &GameState)>,
+}
+
+pub struct Game {
+    pub world: World,
+    pub state: GameState,
+    pub systems: Systems,
+}
+
+// Resources
+pub struct EnemyManager {
+    pub active_enemy: Option<usize>,
+}
+
+impl World {
+    pub fn new() -> Self {
+        Self {
+            entities: vec![],
+            sprites: vec![],
+            resources: HashMap::new(),
+        }
+    }
+
+    pub fn with_tag(&self, tag: Tag) -> impl Iterator<Item = &Entity> {
+        self.entities
+            .iter()
+            .filter(move |entity| entity.tag.is_some_and(|e| e == tag))
+    }
+
+    pub fn with_tag_mut(&mut self, tag: Tag) -> impl Iterator<Item = &mut Entity> {
+        self.entities
+            .iter_mut()
+            .filter(move |entity| entity.tag.is_some_and(|e| e == tag))
+    }
+
+    pub fn add_sprite(mut self, sprite: Sprite) -> Self {
+        self.sprites.push(sprite);
+        self
+    }
+
+    pub fn spawn(mut self, entity: Entity) -> Self {
+        self.entities.push(entity);
+        self
+    }
+
+    pub fn insert_resource<T: 'static>(&mut self, resource: T) {
+        self.resources.insert(TypeId::of::<T>(), Box::new(resource));
+    }
+
+    pub fn get_resource<T: 'static>(&self) -> Option<&T> {
+        self.resources
+            .get(&TypeId::of::<T>())
+            .and_then(|r| r.downcast_ref::<T>())
+    }
+
+    pub fn get_resource_mut<T: 'static>(&mut self) -> Option<&mut T> {
+        self.resources
+            .get_mut(&TypeId::of::<T>())
+            .and_then(|r| r.downcast_mut::<T>())
+    }
+}
+
+impl Physics {
+    pub fn new() -> Physics {
+        Self {
+            is_grounded: true,
+            velocity: Velocity { x: 0.0, y: 0.0 },
+        }
+    }
+}
+
+pub fn debug(entities: &[Entity]) {
+    for e in entities {
+        draw_rectangle_lines(
+            e.transform.x,
+            e.transform.y,
+            e.transform.w,
+            e.transform.h,
+            2.0,
+            WHITE,
+        );
+    }
+}
+
+// pub fn debug_sprites(entities: &[Entity]) {
+//     for e in entities {
+//         let Some(sprite) = &e.current_sprite else {
+//             continue;
+//         };
+//         let frame = sprite.sprite.frame();
+//         draw_rectangle_lines(
+//             frame.source_rect.x,
+//             frame.source_rect.y,
+//             48.0 * 2.0,
+//             48.0 * 2.0,
+//             2.0,
+//             WHITE,
+//         );
+//     }
+// }
+
+impl Entity {
+    pub fn new(rect: Rect) -> Self {
+        Self {
+            transform: rect,
+            tag: None,
+            render: None,
+            current_sprite: None,
+            original_sprite: None,
+            physics: None,
+            attack: None,
+        }
+    }
+
+    pub fn with_attack(mut self, animation: usize) -> Self {
+        self.attack = Some(Attack {
+            is_attacking: false,
+            animation,
+        });
+        self
+    }
+
+    pub fn with_render(mut self, color: Color) -> Self {
+        self.render = Some(Render { color });
+        self
+    }
+
+    pub fn with_sprite(mut self, sprite: usize) -> Self {
+        self.original_sprite = Some(sprite);
+        self.current_sprite = Some(sprite);
+        self
+    }
+
+    pub fn with_tag(mut self, tag: Tag) -> Entity {
+        self.tag = Some(tag);
+        self
+    }
+
+    pub fn with_physics(mut self, physics: Physics) -> Entity {
+        self.physics = Some(physics);
+        self
+    }
+}
+
+impl Systems {
+    pub fn new() -> Self {
+        Self {
+            update: vec![],
+            render: vec![],
+        }
+    }
+}
+
+impl GameState {
+    pub fn new() -> Self {
+        Self {
+            score: 0.0,
+            game_over: false,
+        }
+    }
+}
+
+impl Game {
+    pub fn update(&mut self, input: &Input) {
+        for system in &self.systems.update {
+            system(&mut self.world, &mut self.state, input);
+        }
+    }
+
+    pub fn render(&self) {
+        for system in &self.systems.render {
+            system(&self.world, &self.state);
+        }
+    }
+}
+
+impl Game {
+    pub fn with_update_system(mut self, system: fn(&mut World, &mut GameState, &Input)) -> Self {
+        self.systems.update.push(system);
+        self
+    }
+
+    pub fn with_render_system(mut self, system: fn(&World, &GameState)) -> Self {
+        self.systems.render.push(system);
+        self
+    }
+
+    pub fn with_update_systems(
+        mut self,
+        systems: Vec<fn(&mut World, &mut GameState, &Input)>,
+    ) -> Self {
+        self.systems.update.extend(systems);
+        self
+    }
+
+    pub fn with_render_systems(mut self, systems: Vec<fn(&World, &GameState)>) -> Self {
+        self.systems.render.extend(systems);
+        self
+    }
+}
+
+impl Game {
+    pub fn new(world: World) -> Self {
+        Self {
+            world,
+            state: GameState::new(),
+            systems: Systems::new(),
+        }
+    }
+}
+</file>
+
+<file path="games/avoider/src/main.rs">
+mod background;
+mod tests;
+
+use macroquad::experimental::animation::{AnimatedSprite, Animation};
+use macroquad::prelude::*;
+use shared_v2::*;
+
+const ORIGINAL_SPRITE_SIZE: f32 = 48.0;
+const GAME_SPRITE_SIZE: f32 = 48.0 * 2.0;
+const GROUND: f32 = 40.0;
+const DEFAULT_PLAYER_POSITION: f32 = 96.0;
+const SPEED_SCREEN_RATO: f32 = 0.4;
+const CHARACTER_SCALE: f32 = 4.0;
+const FLYING_HEIGHT: f32 = 250.0; // const GRAVITY: f32 = 800.0;
+const DESIRED_JUMP_HEIGHT: f32 = 250.0;
+const GRAVITY: f32 = 800.0;
+
+fn normalise_camera() {
+    let mut camera = Camera2D::default();
+
+    camera.zoom = vec2(2.0 / screen_width(), -2.0 / screen_height());
+    camera.target = vec2(screen_width() * 0.5, screen_height() * 0.5);
+    camera.offset = vec2(0.0, 0.0);
+
+    set_camera(&camera);
+}
+
+fn gravity_system(world: &mut World, _state: &mut GameState, input: &Input) {
+    for e in &mut world.entities {
+        let Some(ref mut physics) = e.physics else {
+            continue;
+        };
+
+        let jump_strength: f32 = (2.0 * GRAVITY * DESIRED_JUMP_HEIGHT).sqrt();
+
+        if input.spacebar && physics.is_grounded {
+            physics.velocity.y += jump_strength;
+            physics.is_grounded = false;
+        }
+        if !physics.is_grounded {
+            physics.velocity.y -= GRAVITY * input.dt;
+            if e.transform.y.ceil() < GROUND {
+                e.transform.y = GROUND;
+                physics.is_grounded = true;
+                physics.velocity.y = 0.0;
+            }
+        }
+        e.transform.y += physics.velocity.y * input.dt;
+    }
+}
+
+fn render_sprites(world: &World, _state: &GameState) {
+    let sprites = &world.sprites;
+    for entity in &world.entities {
+        let Some(player_index) = entity.current_sprite else {
+            continue;
+        };
+        let player = &sprites[player_index];
+        let frame = player.sprite.frame();
+        let direction = if entity.tag.is_some() && entity.tag.unwrap() == Tag::Enemy {
+            -1.0
+        } else {
+            1.0
+        };
+        draw_texture_ex(
+            &player.texture,
+            entity.transform.x + ORIGINAL_SPRITE_SIZE * direction,
+            entity.transform.y,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(frame.dest_size * CHARACTER_SCALE),
+                source: Some(frame.source_rect),
+                flip_y: true,
+                ..Default::default()
+            },
+        );
+    }
+}
+
+fn update_sprites(world: &mut World) {
+    let sprites = &mut world.sprites;
+    for entity in &mut world.entities {
+        let Some(sprite_index) = entity.current_sprite else {
+            continue;
+        };
+        let player_sprite = &mut sprites[sprite_index];
+        let Some(ref mut physics) = entity.physics else {
+            player_sprite.sprite.update();
+            continue;
+        };
+
+        match player_sprite.tag {
+            AnimationTag::Movement => {
+                if physics.is_grounded {
+                    player_sprite.sprite.update();
+                }
+            }
+            AnimationTag::Attack => {
+                let Some(ref mut attack) = entity.attack else {
+                    continue;
+                };
+                player_sprite.sprite.update();
+                if player_sprite.sprite.is_last_frame() {
+                    entity.current_sprite = entity.original_sprite;
+                    attack.is_attacking = false;
+                }
+            }
+        }
+    }
+}
+
+fn collision_system(world: &mut World, state: &mut GameState, _input: &Input) {
+    let len = world.entities.len();
+    for i in 0..len {
+        for j in i + 1..len {
+            let (a, b) = {
+                let (left, right) = world.entities.split_at_mut(j);
+                (&mut left[i], &mut right[0])
+            };
+
+            if a.tag.is_some()
+                && a.tag.unwrap() == Tag::Player
+                && a.transform.overlaps(&b.transform)
+            {
+                state.game_over = true;
+            }
+        }
+    }
+}
+
+fn ui_system(_world: &World, state: &GameState) {
+    set_default_camera();
+
+    if state.game_over {
+        let text = "GAME OVER!";
+        let text_dimensions = measure_text(text, None, 50, 1.0);
+        let pos = Transform {
+            x: screen_width() / 2.0 - text_dimensions.width / 2.0,
+            y: screen_height() / 2.0 - text_dimensions.height / 2.0,
+        };
+        draw_text(text, pos.x, pos.y, 60.0, RED);
+    }
+}
+
+fn move_enemy_system(world: &mut World, _state: &mut GameState, input: &Input) {
+    let speed = SPEED_SCREEN_RATO * screen_width();
+    for e in world.with_tag_mut(Tag::Enemy) {
+        e.transform.x -= speed * input.dt;
+    }
+}
+
+fn enemy_spawn_system(world: &mut World, _state: &mut GameState, _input: &Input) {
+    let screen_w = screen_width();
+
+    let active_enemy = {
+        world
+            .get_resource::<EnemyManager>()
+            .and_then(|m| m.active_enemy)
+    };
+
+    let still_active = if let Some(idx) = active_enemy {
+        let e = &world.entities[idx];
+        e.transform.x > -GAME_SPRITE_SIZE 
+    } else {
+        false
+    };
+
+    if still_active {
+        return;
+    }
+
+    let enemy_indices: Vec<_> = world
+        .entities
+        .iter()
+        .enumerate()
+        .filter(|(_, e)| e.tag == Some(Tag::Enemy))
+        .map(|(i, _)| i)
+        .collect();
+
+    if enemy_indices.is_empty() {
+        return;
+    }
+
+    let choice = rand::gen_range(0, enemy_indices.len() as i32) as usize;
+    let idx = enemy_indices[choice];
+
+    {
+        let enemy = &mut world.entities[idx];
+        enemy.transform.x = screen_w + rand::gen_range(0.0, screen_w);
+    }
+
+    {
+        let manager = world.get_resource_mut::<EnemyManager>().unwrap();
+        manager.active_enemy = Some(idx);
+    }
+}
+
+fn enemy_take_damage(world: &mut World, _state: &mut GameState, input: &Input) {
+    let len = world.entities.len();
+    for i in 0..len {
+        for j in i + 1..len {
+            let (a, b) = {
+                let (left, right) = world.entities.split_at_mut(j);
+                (&mut left[i], &mut right[0])
+            };
+
+            let Some(attack) = &a.attack else {
+                continue;
+            };
+
+            if a.tag.is_some() && a.tag.unwrap() == Tag::Player && attack.is_attacking {
+                let dist = a.transform.right() - b.transform.left();
+                if dist.powi(2) < 100.0 {
+                    b.transform.x += GAME_SPRITE_SIZE + screen_width() * rand::gen_range(2.0, 5.0);
+                }
+            }
+        }
+    }
+}
+
+fn attack_system(world: &mut World, _state: &mut GameState, input: &Input) {
+    if input.a {
+        for player in world.with_tag_mut(Tag::Player) {
+            let Some(ref mut attack) = player.attack else {
+                continue;
+            };
+            player.current_sprite = Some(attack.animation.clone());
+        }
+    }
+}
+
+fn restart_game(game: &mut Game, input: &Input) {
+    if input.spacebar {
+        for player in game.world.with_tag_mut(Tag::Player) {
+            player.transform.x = DEFAULT_PLAYER_POSITION;
+            player.transform.y = GROUND;
+        }
+
+        for enemy in game.world.with_tag_mut(Tag::Enemy) {
+            enemy.transform.x += screen_width();
+        }
+        game.state.game_over = false;
+    }
+}
+
+fn load_sprite(name: String) -> AnimatedSprite {
+    AnimatedSprite::new(
+        ORIGINAL_SPRITE_SIZE as u32,
+        ORIGINAL_SPRITE_SIZE as u32,
+        &[Animation {
+            name,
+            row: 0,
+            frames: 4,
+            fps: 12,
+        }],
+        true,
+    )
+}
+
+async fn load_player(file_name: &str) -> Texture2D {
+    let texture: Texture2D = load_texture(file_name).await.expect("Couldn't load file");
+    texture.set_filter(FilterMode::Linear);
+    texture
+}
+
+#[macroquad::main("Death avoider")]
+async fn main() {
+    set_pc_assets_folder("./assets");
+    let mut para = background::load_background_assets().await;
+    let texture = load_player("boy_walk.png").await;
+    let sprite = load_sprite("player".to_string());
+    let snake_texture = load_player("snake_walk.png").await;
+    let snake_sprite = load_sprite("imma_snake".to_string());
+    let vulture_texture = load_player("vulture_walk.png").await;
+    let vulture_sprite = load_sprite("vulture".to_string());
+    let attack_texture = load_player("boy_attack.png").await;
+    let attack_animation = load_sprite("attack!".to_string());
+    build_textures_atlas();
+
+    let entity = Entity::new(Rect {
+        x: DEFAULT_PLAYER_POSITION,
+        y: GROUND,
+        w: GAME_SPRITE_SIZE,
+        h: GAME_SPRITE_SIZE,
+    })
+    .with_tag(Tag::Player)
+    .with_render(BLACK)
+    .with_physics(Physics::new())
+    .with_sprite(0)
+    .with_attack(1);
+
+    let snake = Entity::new(Rect {
+        x: screen_width() * 2.0,
+        y: GROUND,
+        w: ORIGINAL_SPRITE_SIZE / 2.0,
+        h: ORIGINAL_SPRITE_SIZE / 2.0,
+    })
+    .with_sprite(2)
+    .with_tag(Tag::Enemy);
+
+    let vulture = Entity::new(Rect {
+        x: screen_width() * 4.0,
+        y: FLYING_HEIGHT,
+        w: ORIGINAL_SPRITE_SIZE / 2.0,
+        h: ORIGINAL_SPRITE_SIZE / 2.0,
+    })
+    .with_sprite(3)
+    .with_tag(Tag::Enemy);
+
+    let mut world = World::new()
+        .add_sprite(Sprite {
+            texture,
+            sprite,
+            tag: AnimationTag::Movement,
+        })
+        .add_sprite(Sprite {
+            texture: attack_texture,
+            sprite: attack_animation,
+            tag: AnimationTag::Attack,
+        })
+        .add_sprite(Sprite {
+            texture: snake_texture,
+            sprite: snake_sprite,
+            tag: AnimationTag::Movement,
+        })
+        .add_sprite(Sprite {
+            texture: vulture_texture,
+            sprite: vulture_sprite,
+            tag: AnimationTag::Movement,
+        })
+        .spawn(entity)
+        .spawn(snake)
+        .spawn(vulture);
+
+    world.insert_resource(EnemyManager { active_enemy: None });
+
+    let mut game = Game::new(world)
+        .with_update_systems(vec![
+            gravity_system,
+            move_enemy_system,
+            collision_system,
+            attack_system,
+            enemy_spawn_system,
+        ])
+        .with_render_systems(vec![render_sprites, ui_system]);
+
+    loop {
+        let input = Input {
+            dt: get_frame_time(),
+            spacebar: is_key_pressed(KeyCode::Space),
+            a: is_key_pressed(KeyCode::A),
+        };
+        normalise_camera();
+        background::render_paralax_background(&mut para, game.state.game_over);
+        if !game.state.game_over {
+            game.update(&input);
+            update_sprites(&mut game.world);
+        } else {
+            restart_game(&mut game, &input);
+        }
+        game.render();
+        next_frame().await;
+    }
+}
+</file>
+
+<file path="shared/src/lib.rs">
+mod components;
+mod entity;
+mod systems;
+mod tests;
+mod ui;
+mod utils;
+
+pub use crate::components::*;
+pub use crate::entity::*;
+pub use crate::systems::*;
+pub use crate::ui::*;
+pub use crate::utils::*;
+
+use macroquad::camera::Camera2D;
+use macroquad::camera::set_camera;
+use macroquad::math::Rect;
+use macroquad::math::vec2;
+use macroquad::window::screen_height;
+use macroquad::window::screen_width;
+
+#[derive(Debug, PartialEq)]
+pub enum GameState {
+    Running,
+    GameOver,
+}
+
+pub struct World {
+    pub entities: Vec<Entity>,
+    pub origin: Transform,
+    pub state: GameState,
+}
+
+impl World {
+    pub fn new() -> Self {
+        Self {
+            origin: Transform { x: 0.0, y: 0.0 },
+            entities: Vec::new(),
+            state: GameState::Running,
+        }
+    }
+
+    pub fn reset(&mut self) {
+        self.entities.iter_mut().for_each(|e| e.reset());
+    }
+
+    pub fn despawn(&mut self, id: i32) {
+        let index = self.entities.iter().position(|x| x.id == id).unwrap();
+        self.entities.remove(index);
+    }
+
+    // Add pixels_per_unit: f32
+    pub fn set_origin(&mut self, origin_x: f32, origin_y: f32) {
+        let mut camera = Camera2D::default();
+
+        camera.target = vec2(origin_x, origin_y);
+        // Add (screen_width() / pixels_per_unit)
+        camera.zoom = vec2(2.0 / screen_width(), -2.0 / screen_height());
+        self.origin.x = origin_x;
+        self.origin.y = origin_y;
+        set_camera(&camera);
+    }
+
+    pub fn set_default_origin(&mut self) {
+        self.set_origin(self.origin.x, self.origin.y);
+    }
+
+    pub fn find(&self, id: i32) -> Option<&Entity> {
+        self.entities.iter().find(|ent| id == ent.id)
+    }
+
+    pub fn find_mut(&mut self, id: i32) -> Option<&mut Entity> {
+        self.entities.iter_mut().find(|ent| id == ent.id)
+    }
+
+    pub fn spawn(&mut self, entity: Entity) {
+        self.entities.push(entity);
+    }
+
+    pub fn render(&mut self) {
+        render_system(&mut self.entities);
+    }
+
+    pub fn collide_system(&mut self) {
+        let len = self.entities.len();
+
+        for i in 0..len {
+            for j in i + 1..len {
+                let (a, b) = {
+                    let (left, right) = self.entities.split_at_mut(j);
+                    (&mut left[i], &mut right[0])
+                };
+
+                let Some(ref mut col_1) = a.collide else {
+                    continue;
+                };
+                let Some(ref mut col_2) = b.collide else {
+                    continue;
+                };
+                col_1.is_collided = false;
+                col_2.is_collided = false;
+
+                if a.transform.overlaps(&b.transform) {
+                    if a.id == 1 || b.id == 1 {
+                        self.state = GameState::GameOver;
+                    }
+                    col_1.is_collided = true;
+                    col_2.is_collided = true;
+                }
+            }
+        }
+    }
+
+    pub fn update(&mut self, input: &components::Input) {
+        collide_system(&mut self.entities);
+        jump_system(&mut self.entities, input);
+        movement_system(&mut self.entities, input);
+    }
+
+    pub fn new_update(&mut self, input: &components::Input) {
+        self.collide_system();
+        jump_system(&mut self.entities, input);
+        movement_system(&mut self.entities, input);
+    }
+}
+</file>
+
+<file path="games/jumper/src/main.rs">
+use macroquad::prelude::*;
+use shared::{Entity, Input, Transform, World, render_text};
+
+const DEFAULT_SIZE: f32 = 64.0;
+
+#[macroquad::main("My game")]
+async fn main() {
+    let mut gameover = false;
+    let player_id = 1;
+    let enemy_id = 2;
+    let edge = screen_width() / 2.0;
+
+    let player_ent = Entity::new(player_id, -screen_width() / 4.0, 0.0);
+    let enemy_ent = Entity::new(
+        enemy_id,
+        // 3.0 is to add some padding so the user has time
+        // to react at the start of the game
+        screen_width(),
+        0.0,
+    );
+
+    let mut world = World::new();
+
+    world.set_origin(0.0, 200.0);
+    world.spawn(player_ent.with_jump(350.0, 0.0).with_collide().with_render(
+        DEFAULT_SIZE,
+        DEFAULT_SIZE,
+        YELLOW,
+    ));
+    world.spawn(
+        enemy_ent
+            .with_collide()
+            // By making the speed a factor of screen width, the speed is proportional to the size
+            // of the screen
+            .with_move(-screen_width() / 1.25, 0.0)
+            .with_render(DEFAULT_SIZE, DEFAULT_SIZE, RED),
+    );
+
+    let time = get_frame_time();
+    let mut score = 0.0;
+
+    loop {
+        clear_background(DARKGREEN);
+
+        if !gameover {
+            score += get_frame_time() * 100.0;
+            let input = Input {
+                dt: time,
+                is_jump: !gameover && is_key_pressed(KeyCode::Space),
+            };
+            let Some(ref c) = world.find(player_id).unwrap().collide else {
+                continue;
+            };
+
+            if c.is_collided {
+                gameover = true;
+                continue;
+            }
+
+            world.update(&input);
+
+            if world.find(enemy_id).unwrap().transform.x < -edge - DEFAULT_SIZE {
+                world.find_mut(enemy_id).unwrap().set_position(
+                    screen_width() + DEFAULT_SIZE * rand::gen_range(2, 10) as f32,
+                    0.0 + (DEFAULT_SIZE * 2.0) * rand::gen_range(0, 2) as f32,
+                );
+            }
+        }
+
+        world.render();
+        draw_rectangle(-screen_width() / 2.0, -100.0, screen_width(), 100.0, BLUE);
+
+        let text = format!("{:.0}", score);
+        let text_dimensions = measure_text(&text, None, 50, 1.0);
+        let score_pos = Transform {
+            x: 10.0,
+            y: 10.0 + text_dimensions.height,
+        };
+        render_text(&mut world, &text, 40.0, &score_pos, WHITE);
+
+        if gameover {
+            let text = "GAME OVER!";
+            let text_dimensions = measure_text(text, None, 50, 1.0);
+            let pos = Transform {
+                x: screen_width() / 2.0 - text_dimensions.width / 2.0,
+                y: screen_height() / 2.0 - text_dimensions.height / 2.0,
+            };
+
+            render_text(&mut world, text, 50.0, &pos, RED);
+            if is_key_pressed(KeyCode::Space) {
+                score = 0.0;
+                gameover = false;
+                world.find_mut(player_id).unwrap().set_position(-100.0, 0.0);
+                world
+                    .find_mut(enemy_id)
+                    .unwrap()
+                    .set_position(screen_width() + DEFAULT_SIZE, 0.0);
+                world.reset();
+            }
+        }
+
+        next_frame().await
+    }
+}
+</file>
+
+<file path="web/index.html">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
+    <title>My portfolio</title>
+</head>
+<body>
+    <h1>Welcome to my portfolio</h1>
+    <h2>Mamunur Qureshi</h2>
+    <p>All these games were written completely in rust!</p>
+    <section>
+        <div class="row">
+            <div class="container">
+                <a href="./games/shooter/index.html">
+                    <div class="shooter tile"></div>
+                </a>
+                <p>Ship dodger</p>
+            </div>
+            <div class="container">
+                <a href="./games/avoider/index.html">
+                    <div class="desert tile"></div>
+                </a>
+                <p>Desert runner</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="container">
+                <a href="./games/dodger/index.html">
+                    <div class="dodger tile"></div>
+                </a>
+                <p>Square shooter</p>
+            </div>
+            <div class="container">
+                <a href="./games/jumper/index.html">
+                    <div class="jumper tile">
+                    </div>
+                </a>
+                <p>Yellow jumper</p>
+            </div>
+        </div>
+    </section>
+</body>
+</html>
+</file>
+
+<file path="games/shooter/src/main.rs">
+use macroquad::experimental::animation::{AnimatedSprite, Animation};
+use macroquad::prelude::*;
+use shared::{Entity, GameState, Input, Transform, World, render_text};
+
+const MOVEMENT_SPEED: f32 = 100.0;
+
+fn create_user() -> Entity {
+    let mut entity = Entity::new(1, 0.0, 0.0).with_collide();
+    entity.set_dimensions(32.0, 48.0);
+    entity
+}
+
+#[macroquad::main("Shooter")]
+async fn main() {
+    let mut world = World::new();
+    world.spawn(create_user());
+    set_pc_assets_folder("./assets");
+    // Texture2D stores image data in GPU (Image uses the CPU)
+    let ship_texture: Texture2D = load_texture("ship.png").await.expect("Couldn't load file");
+    ship_texture.set_filter(FilterMode::Linear);
+    // let bullet_texture: Texture2D = load_texture("laser-bolts.png")
+    //     .await
+    //     .expect("Couldn't load file");
+    // bullet_texture.set_filter(FilterMode::Linear);
+    let enemy_small_texture: Texture2D = load_texture("enemy-small.png")
+        .await
+        .expect("Couldn't load file");
+    enemy_small_texture.set_filter(FilterMode::Nearest);
+    build_textures_atlas();
+
+    let mut ship_sprite = AnimatedSprite::new(
+        16,
+        24,
+        &[
+            Animation {
+                name: "idle".to_string(),
+                row: 0,
+                frames: 2,
+                fps: 12,
+            },
+            Animation {
+                name: "left".to_string(),
+                row: 2,
+                frames: 2,
+                fps: 12,
+            },
+            Animation {
+                name: "right".to_string(),
+                row: 4,
+                frames: 2,
+                fps: 12,
+            },
+        ],
+        true,
+    );
+    let mut enemy_small_sprite = AnimatedSprite::new(
+        17,
+        16,
+        &[Animation {
+            name: "enemy_small".to_string(),
+            row: 0,
+            frames: 2,
+            fps: 12,
+        }],
+        true,
+    );
+    loop {
+        clear_background(BLACK);
+        world.set_default_origin();
+
+        let delta_time = get_frame_time();
+        if world.state == GameState::Running {
+            let input = Input {
+                dt: delta_time,
+                is_jump: false,
+            };
+            world.new_update(&input);
+            ship_sprite.set_animation(0);
+            if is_key_down(KeyCode::Right) {
+                // direction_modifier += 0.05 * delta_time;
+                ship_sprite.set_animation(1);
+                world.find_mut(1).unwrap().transform.x += MOVEMENT_SPEED * delta_time;
+            }
+            if is_key_down(KeyCode::Left) {
+                ship_sprite.set_animation(2);
+                // direction_modifier -= 0.05 * delta_time;
+                world.find_mut(1).unwrap().transform.x -= MOVEMENT_SPEED * delta_time;
+            }
+            if is_key_down(KeyCode::Down) {
+                world.find_mut(1).unwrap().transform.y -= MOVEMENT_SPEED * delta_time;
+            }
+            if is_key_down(KeyCode::Up) {
+                world.find_mut(1).unwrap().transform.y += MOVEMENT_SPEED * delta_time;
+            }
+            if rand::gen_range(0, 99) >= 95 {
+                let mut entity = Entity::new(
+                    world.entities.len() as i32,
+                    rand::gen_range(-screen_width() / 2.0 + 32.0, screen_width() / 2.0 - 32.0),
+                    screen_width() / 2.0,
+                )
+                .with_move(0.0, -100.0)
+                .with_collide();
+                entity.set_dimensions(32.0, 32.0);
+                world.spawn(entity);
+            }
+
+            for i in 0..world.entities.len() - 1 {
+                if world.entities[i].id != 1 {
+                    if world.entities[i].transform.y < -screen_width() {
+                        world.despawn(world.entities[i].id);
+                    }
+                }
+            }
+        }
+
+        let enemy_frame = enemy_small_sprite.frame();
+        for i in 1..world.entities.len() - 1 {
+            draw_texture_ex(
+                &enemy_small_texture,
+                world.entities[i].transform.x,
+                world.entities[i].transform.y + 32.0,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(32.0, -32.0)),
+                    source: Some(enemy_frame.source_rect),
+                    ..Default::default()
+                },
+            )
+        }
+
+        if world.state == GameState::GameOver {
+            let text = "GAME OVER!";
+            let text_dimensions = measure_text(text, None, 50, 1.0);
+            let pos = Transform {
+                x: screen_width() / 2.0 - text_dimensions.width / 2.0,
+                y: screen_height() / 2.0 - text_dimensions.height / 2.0,
+            };
+
+            render_text(&mut world, text, 50.0, &pos, RED);
+
+            if is_key_pressed(KeyCode::Space) {
+                world.entities = vec![];
+                world.spawn(create_user());
+                world.state = GameState::Running;
+                world.reset();
+            }
+        }
+
+        let ship_frame = ship_sprite.frame();
+        draw_texture_ex(
+            &ship_texture,
+            world.find_mut(1).unwrap().transform.x + ship_frame.dest_size.x * 2.0,
+            world.find_mut(1).unwrap().transform.y + ship_frame.dest_size.y * 2.0,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(ship_frame.dest_size * -2.0),
+                source: Some(ship_frame.source_rect),
+                ..Default::default()
+            },
+        );
+
+        ship_sprite.update();
+        enemy_small_sprite.update();
+        next_frame().await
+    }
+}
+</file>
+
+<file path=".github/workflows/deploy.yml">
+name: Build and Deploy
+on:
+  push:
+    branches:
+      - main # If your default branch is named something else, change this
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-unknown-unknown
+          override: true
+
+      - name: Build
+        run: cargo build --release --target wasm32-unknown-unknown
+
+      - name: Prepare Deployment Directory
+        run: |
+          mkdir -p ./deploy/
+          cp -a ./web/. ./deploy/
+          for wasm in target/wasm32-unknown-unknown/release/*.wasm; do
+            echo "------"
+            name=$(basename "$wasm" .wasm)
+            echo "$name"
+            mkdir -p deploy/games/$name
+            cp -r games/$name/assets ./deploy/games/$name/assets
+            cp "$wasm" ./deploy/games/$name/
+            cp web/template.txt ./deploy/games/$name/index.html
+            echo "<script>load(\"$name.wasm\");</script></body></html>" >> ./deploy/games/$name/index.html
+          done
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./deploy
+</file>
+
+</files>

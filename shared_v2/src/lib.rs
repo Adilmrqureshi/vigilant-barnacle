@@ -92,6 +92,7 @@ pub struct Input {
     pub dt: f32,
     pub spacebar: bool,
     pub a: bool,
+    pub screen_width: f32
 }
 
 pub struct Systems {

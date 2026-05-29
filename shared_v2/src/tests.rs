@@ -167,6 +167,7 @@ mod tests {
             dt: 0.016,
             spacebar: false,
             a: false,
+            screen_width: 800.0
         };
 
         game.update(&input);
@@ -203,6 +204,7 @@ mod tests {
             dt: 0.016,
             spacebar: false,
             a: false,
+            screen_width: 800.0
         };
 
         game.update(&input);

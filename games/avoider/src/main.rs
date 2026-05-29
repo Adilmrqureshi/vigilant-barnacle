@@ -143,23 +143,21 @@ fn ui_system(_world: &World, state: &GameState) {
 }
 
 fn move_enemy_system(world: &mut World, _state: &mut GameState, input: &Input) {
-    let speed = SPEED_SCREEN_RATO * screen_width();
+    let speed = SPEED_SCREEN_RATO * input.screen_width;
     for e in world.with_tag_mut(Tag::Enemy) {
         e.transform.x -= speed * input.dt;
     }
 }
 
-fn enemy_spawn_system(world: &mut World, _state: &mut GameState, _input: &Input) {
-    let screen_w = screen_width();
+fn enemy_spawn_system(world: &mut World, _state: &mut GameState, input: &Input) {
+    let screen_w = input.screen_width;
 
-    // Step 1: read active_enemy WITHOUT holding mutable borrow
     let active_enemy = {
         world
             .get_resource::<EnemyManager>()
             .and_then(|m| m.active_enemy)
     };
 
-    // Step 2: check if it’s still visible
     let still_active = if let Some(idx) = active_enemy {
         let e = &world.entities[idx];
         e.transform.x > -GAME_SPRITE_SIZE 
@@ -171,7 +169,6 @@ fn enemy_spawn_system(world: &mut World, _state: &mut GameState, _input: &Input)
         return;
     }
 
-    // Step 3: gather candidates (no mutable borrow yet)
     let enemy_indices: Vec<_> = world
         .entities
         .iter()
@@ -187,39 +184,14 @@ fn enemy_spawn_system(world: &mut World, _state: &mut GameState, _input: &Input)
     let choice = rand::gen_range(0, enemy_indices.len() as i32) as usize;
     let idx = enemy_indices[choice];
 
-    // Step 4: mutate entity
     {
         let enemy = &mut world.entities[idx];
         enemy.transform.x = screen_w + rand::gen_range(0.0, screen_w);
     }
 
-    // Step 5: NOW mutate the resource (separate borrow)
     {
         let manager = world.get_resource_mut::<EnemyManager>().unwrap();
         manager.active_enemy = Some(idx);
-    }
-}
-
-fn enemy_take_damage(world: &mut World, _state: &mut GameState, input: &Input) {
-    let len = world.entities.len();
-    for i in 0..len {
-        for j in i + 1..len {
-            let (a, b) = {
-                let (left, right) = world.entities.split_at_mut(j);
-                (&mut left[i], &mut right[0])
-            };
-
-            let Some(attack) = &a.attack else {
-                continue;
-            };
-
-            if a.tag.is_some() && a.tag.unwrap() == Tag::Player && attack.is_attacking {
-                let dist = a.transform.right() - b.transform.left();
-                if dist.powi(2) < 100.0 {
-                    b.transform.x += GAME_SPRITE_SIZE + screen_width() * rand::gen_range(2.0, 5.0);
-                }
-            }
-        }
     }
 }
 
@@ -242,7 +214,7 @@ fn restart_game(game: &mut Game, input: &Input) {
         }
 
         for enemy in game.world.with_tag_mut(Tag::Enemy) {
-            enemy.transform.x += screen_width();
+            enemy.transform.x += input.screen_width;
         }
         game.state.game_over = false;
     }
@@ -354,6 +326,7 @@ async fn main() {
             dt: get_frame_time(),
             spacebar: is_key_pressed(KeyCode::Space),
             a: is_key_pressed(KeyCode::A),
+            screen_width: screen_width()
         };
         normalise_camera();
         background::render_paralax_background(&mut para, game.state.game_over);

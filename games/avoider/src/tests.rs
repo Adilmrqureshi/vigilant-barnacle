@@ -17,7 +17,9 @@ mod tests {
             },
             tag: Some(Tag::Player),
             render: None,
-            sprite: None,
+            current_sprite: None,
+            attack: None,
+            original_sprite: None,
             physics: Some(Physics {
                 is_grounded: grounded,
                 velocity: Velocity { x: 0.0, y: 0.0 },
@@ -35,9 +37,10 @@ mod tests {
         let input = Input {
             dt: 0.016,
             spacebar: false,
+            a: false,
         };
 
-        gravity_engine(&mut world, &mut state, &input);
+        gravity_system(&mut world, &mut state, &input);
 
         let e = &world.entities[0];
         let physics = e.physics.as_ref().unwrap();

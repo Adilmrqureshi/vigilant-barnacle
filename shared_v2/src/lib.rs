@@ -1,10 +1,10 @@
 mod tests;
 use std::fmt::Debug;
 
-use macroquad::experimental::animation::AnimatedSprite;
 use macroquad::{
     color::{Color, WHITE},
     math::Rect,
+    prelude::animation::AnimatedSprite,
     shapes::draw_rectangle_lines,
     texture::Texture2D,
 };
@@ -13,6 +13,13 @@ use macroquad::{
 pub struct Transform {
     pub x: f32,
     pub y: f32,
+}
+
+#[derive(Clone)]
+pub struct Sprite {
+    pub texture: Texture2D,
+    pub sprite: AnimatedSprite,
+    pub tag: AnimationTag,
 }
 
 #[derive(Debug)]
@@ -26,15 +33,16 @@ pub struct Render {
     pub color: Color,
 }
 
-pub struct Sprite {
-    pub texture: Texture2D,
-    pub sprite: AnimatedSprite,
-}
-
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Tag {
     Player,
     Enemy,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum AnimationTag {
+    Movement,
+    Attack,
 }
 
 pub struct Velocity {
@@ -47,20 +55,27 @@ pub struct Physics {
     pub velocity: Velocity,
 }
 
+pub struct Attack {
+    pub animation: usize,
+    pub is_attacking: bool,
+}
+
 pub struct Entity {
     pub transform: Rect,
 
     pub tag: Option<Tag>,
 
     pub render: Option<Render>,
-    pub sprite: Option<Sprite>,
+    pub current_sprite: Option<usize>,
+    pub original_sprite: Option<usize>,
 
     pub physics: Option<Physics>,
+    pub attack: Option<Attack>,
 }
 
-// entities and components
 pub struct World {
     pub entities: Vec<Entity>,
+    pub sprites: Vec<Sprite>,
 }
 
 pub struct GameState {
@@ -71,6 +86,7 @@ pub struct GameState {
 pub struct Input {
     pub dt: f32,
     pub spacebar: bool,
+    pub a: bool,
 }
 
 pub struct Systems {
@@ -86,7 +102,10 @@ pub struct Game {
 
 impl World {
     pub fn new() -> Self {
-        Self { entities: vec![] }
+        Self {
+            entities: vec![],
+            sprites: vec![],
+        }
     }
 
     pub fn with_tag(&self, tag: Tag) -> impl Iterator<Item = &Entity> {
@@ -99,6 +118,11 @@ impl World {
         self.entities
             .iter_mut()
             .filter(move |entity| entity.tag.is_some_and(|e| e == tag))
+    }
+
+    pub fn add_sprite(mut self, sprite: Sprite) -> Self {
+        self.sprites.push(sprite);
+        self
     }
 
     pub fn spawn(mut self, entity: Entity) -> Self {
@@ -129,22 +153,22 @@ pub fn debug(entities: &[Entity]) {
     }
 }
 
-pub fn debug_sprites(entities: &[Entity]) {
-    for e in entities {
-        let Some(sprite) = &e.sprite else {
-            continue;
-        };
-        let frame = sprite.sprite.frame();
-        draw_rectangle_lines(
-            frame.source_rect.x,
-            frame.source_rect.y,
-            48.0 * 2.0,
-            48.0 * 2.0,
-            2.0,
-            WHITE,
-        );
-    }
-}
+// pub fn debug_sprites(entities: &[Entity]) {
+//     for e in entities {
+//         let Some(sprite) = &e.current_sprite else {
+//             continue;
+//         };
+//         let frame = sprite.sprite.frame();
+//         draw_rectangle_lines(
+//             frame.source_rect.x,
+//             frame.source_rect.y,
+//             48.0 * 2.0,
+//             48.0 * 2.0,
+//             2.0,
+//             WHITE,
+//         );
+//     }
+// }
 
 impl Entity {
     pub fn new(rect: Rect) -> Self {
@@ -152,9 +176,19 @@ impl Entity {
             transform: rect,
             tag: None,
             render: None,
-            sprite: None,
+            current_sprite: None,
+            original_sprite: None,
             physics: None,
+            attack: None,
         }
+    }
+
+    pub fn with_attack(mut self, animation: usize) -> Self {
+        self.attack = Some(Attack {
+            is_attacking: false,
+            animation,
+        });
+        self
     }
 
     pub fn with_render(mut self, color: Color) -> Self {
@@ -162,8 +196,9 @@ impl Entity {
         self
     }
 
-    pub fn with_sprite(mut self, texture: Texture2D, sprite: AnimatedSprite) -> Self {
-        self.sprite = Some(Sprite { texture, sprite });
+    pub fn with_sprite(mut self, sprite: usize) -> Self {
+        self.original_sprite = Some(sprite);
+        self.current_sprite = Some(sprite);
         self
     }
 

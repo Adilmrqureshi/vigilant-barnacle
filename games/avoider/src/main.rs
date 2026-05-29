@@ -11,10 +11,9 @@ const GROUND: f32 = 40.0;
 const DEFAULT_PLAYER_POSITION: f32 = 96.0;
 const SPEED_SCREEN_RATO: f32 = 0.4;
 const CHARACTER_SCALE: f32 = 4.0;
-const FLYING_RATIO: f32 = 0.4; // Flying object show below the middle (40%) of the screen
-
+const FLYING_HEIGHT: f32 = 250.0; // const GRAVITY: f32 = 800.0;
+const DESIRED_JUMP_HEIGHT: f32 = 250.0;
 const GRAVITY: f32 = 800.0;
-const JUMP_STRENGTH: f32 = 600.0;
 
 fn normalise_camera() {
     let mut camera = Camera2D::default();
@@ -32,8 +31,10 @@ fn gravity_system(world: &mut World, _state: &mut GameState, input: &Input) {
             continue;
         };
 
+        let jump_strength: f32 = (2.0 * GRAVITY * DESIRED_JUMP_HEIGHT).sqrt();
+
         if input.spacebar && physics.is_grounded {
-            physics.velocity.y += JUMP_STRENGTH;
+            physics.velocity.y += jump_strength;
             physics.is_grounded = false;
         }
         if !physics.is_grounded {
@@ -302,11 +303,9 @@ async fn main() {
     .with_sprite(2)
     .with_tag(Tag::Enemy);
 
-    let flying_start_position = FLYING_RATIO * screen_height();
-
     let vulture = Entity::new(Rect {
         x: screen_width() * 4.0,
-        y: flying_start_position,
+        y: FLYING_HEIGHT,
         w: ORIGINAL_SPRITE_SIZE / 2.0,
         h: ORIGINAL_SPRITE_SIZE / 2.0,
     })

@@ -19,18 +19,16 @@ body {
   background-image: url("./assets/square-dodger.png");
 }
 
+.dodger {
+  background-image: url("./assets/desert-runner.png");
+}
+
 .jumper {
   background-image: url("./assets/yellow-jumper.png");
 }
 
 .shooter {
   background-image: url("./assets/shooter.png");
-  background-size: cover;
-  background-position: center;
-}
-
-.coming-soon {
-  background-image: url("./assets/coming-soon.jpg");
   background-size: cover;
   background-position: center;
 }

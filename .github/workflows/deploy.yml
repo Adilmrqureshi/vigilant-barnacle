@@ -15,12 +15,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+        # Installs Rust based on the rust-toolchain.toml file
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: wasm32-unknown-unknown
-          override: true
+        uses: actions-rust-lang/setup-rust-toolchain@v1
 
       - name: Build
         run: RUSTFLAGS="-C link-arg=--allow-undefined" cargo build --release --target wasm32-unknown-unknown

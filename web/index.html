@@ -1,64 +1,70 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Mamunur Qureshi's portfolio of browser games written in Rust, running on WebAssembly and WebGL." />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css" />
-    <title>My portfolio</title>
+    <title>Mamunur Qureshi — Rust Games</title>
 </head>
 <body>
-    <h1>Welcome to my portfolio</h1>
-    <h2>Mamunur Qureshi</h2>
-    <p>All these games were written completely in rust!</p>
-    <section>
-        <div class="row">
-            <div class="container">
-                <a href="https://speller-11jd9kvpr-mamunurs-projects.vercel.app/word-mode">
-                    <div class="bee tile"></div>
+    <header>
+        <p class="badge">PLAYER 1</p>
+        <h1>Mamunur Qureshi</h1>
+        <p class="tagline">Games written completely in Rust, running in your browser with WebAssembly&nbsp;+&nbsp;WebGL.</p>
+    </header>
+    <main>
+        <h2 class="section-title">Select a game</h2>
+        <ul class="grid">
+            <li>
+                <a class="card" href="./games/snake/index.html">
+                    <span class="tile snake" role="img" aria-label="Snake game artwork"></span>
+                    <span class="card-title">Snake <span class="tag">NEW</span></span>
                 </a>
-                <p>Boro Speller</p>
-            </div>
-            <div class="container">
-                <a href="https://speller-11jd9kvpr-mamunurs-projects.vercel.app/">
-                    <div class="speed tile"></div>
+            </li>
+            <li>
+                <a class="card" href="./games/shooter/index.html">
+                    <span class="tile shooter" role="img" aria-label="Ship dodger game artwork"></span>
+                    <span class="card-title">Ship Dodger</span>
                 </a>
-                <p>Boro Typer</p>
-            </div>
-        </div>
-        <div class="row">
-            <div class="container">
-                <a href="./games/shooter/index.html">
-                    <div class="shooter tile"></div>
+            </li>
+            <li>
+                <a class="card" href="./games/avoider/index.html">
+                    <span class="tile desert" role="img" aria-label="Desert runner game artwork"></span>
+                    <span class="card-title">Desert Runner</span>
                 </a>
-                <p>Ship dodger</p>
-            </div>
-            <div class="container">
-                <a href="./games/avoider/index.html">
-                    <div class="desert tile"></div>
+            </li>
+            <li>
+                <a class="card" href="./games/dodger/index.html">
+                    <span class="tile dodger" role="img" aria-label="Square shooter game artwork"></span>
+                    <span class="card-title">Square Shooter</span>
                 </a>
-                <p>Desert runner</p>
-            </div>
-        </div>
-        <div class="row">
-            <div class="container">
-                <a href="./games/dodger/index.html">
-                    <div class="dodger tile"></div>
+            </li>
+            <li>
+                <a class="card" href="./games/jumper/index.html">
+                    <span class="tile jumper" role="img" aria-label="Yellow jumper game artwork"></span>
+                    <span class="card-title">Yellow Jumper</span>
                 </a>
-                <p>Square shooter</p>
-            </div>
-            <div class="container">
-                <a href="./games/jumper/index.html">
-                    <div class="jumper tile">
-                    </div>
+            </li>
+            <li>
+                <a class="card" href="https://speller-11jd9kvpr-mamunurs-projects.vercel.app/word-mode">
+                    <span class="tile bee" role="img" aria-label="Boro Speller game artwork"></span>
+                    <span class="card-title">Boro Speller</span>
                 </a>
-                <p>Yellow jumper</p>
-            </div>
-        </div>
-    </section>
+            </li>
+            <li>
+                <a class="card" href="https://speller-11jd9kvpr-mamunurs-projects.vercel.app/">
+                    <span class="tile speed" role="img" aria-label="Boro Typer game artwork"></span>
+                    <span class="card-title">Boro Typer</span>
+                </a>
+            </li>
+        </ul>
+    </main>
+    <footer>
+        <p>Built with Rust · macroquad · WebAssembly</p>
+    </footer>
 </body>
 </html>

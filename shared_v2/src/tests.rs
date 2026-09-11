@@ -165,9 +165,8 @@ mod tests {
 
         let input = Input {
             dt: 0.016,
-            spacebar: false,
-            a: false,
-            screen_width: 800.0
+            screen_width: 800.0,
+            ..Default::default()
         };
 
         game.update(&input);
@@ -202,9 +201,8 @@ mod tests {
 
         let input = Input {
             dt: 0.016,
-            spacebar: false,
-            a: false,
-            screen_width: 800.0
+            screen_width: 800.0,
+            ..Default::default()
         };
 
         game.update(&input);

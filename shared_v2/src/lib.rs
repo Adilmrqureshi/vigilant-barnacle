@@ -41,6 +41,8 @@ pub struct Render {
 pub enum Tag {
     Player,
     Enemy,
+    Body,
+    Food,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -92,7 +94,28 @@ pub struct Input {
     pub dt: f32,
     pub spacebar: bool,
     pub a: bool,
-    pub screen_width: f32
+    pub up: bool,
+    pub down: bool,
+    pub left: bool,
+    pub right: bool,
+    pub screen_width: f32,
+    pub screen_height: f32,
+}
+
+impl Default for Input {
+    fn default() -> Self {
+        Self {
+            dt: 0.0,
+            spacebar: false,
+            a: false,
+            up: false,
+            down: false,
+            left: false,
+            right: false,
+            screen_width: 0.0,
+            screen_height: 0.0,
+        }
+    }
 }
 
 pub struct Systems {

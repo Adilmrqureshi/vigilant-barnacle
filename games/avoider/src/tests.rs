@@ -12,9 +12,8 @@ mod tests {
     fn dummy_input() -> Input {
         Input {
             dt: 1.0 / 60.0,
-            spacebar: false,
-            a: false,
             screen_width: 800.0,
+            ..Default::default()
         }
     }
 
@@ -57,8 +56,8 @@ mod tests {
         let input = Input {
             dt: 0.016,
             spacebar: true,
-            a: false,
             screen_width: 100.0,
+            ..Default::default()
         };
 
         gravity_system(&mut world, &mut state, &input);
@@ -112,9 +111,8 @@ mod tests {
 
         let input = Input {
             dt: 1.0,
-            spacebar: false,
-            a: false,
             screen_width: 800.0,
+            ..Default::default()
         };
 
         move_enemy_system(&mut world, &mut state, &input);

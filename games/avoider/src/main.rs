@@ -326,7 +326,9 @@ async fn main() {
             dt: get_frame_time(),
             spacebar: is_key_pressed(KeyCode::Space),
             a: is_key_pressed(KeyCode::A),
-            screen_width: screen_width()
+            screen_width: screen_width(),
+            screen_height: screen_height(),
+            ..Default::default()
         };
         normalise_camera();
         background::render_paralax_background(&mut para, game.state.game_over);

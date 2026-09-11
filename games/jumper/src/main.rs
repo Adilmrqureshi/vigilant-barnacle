@@ -3,6 +3,12 @@ use shared::{Entity, Input, Transform, World, render_text};
 
 const DEFAULT_SIZE: f32 = 64.0;
 
+// Enemy speed as a fraction of screen width per second: starts at a medium
+// pace and ramps up the longer a run lasts, capped so it stays beatable.
+const START_SPEED_RATIO: f32 = 0.4;
+const MAX_SPEED_RATIO: f32 = 0.85;
+const SPEED_RAMP_PER_SEC: f32 = 0.0075;
+
 #[macroquad::main("My game")]
 async fn main() {
     let mut gameover = false;
@@ -32,22 +38,31 @@ async fn main() {
             .with_collide()
             // By making the speed a factor of screen width, the speed is proportional to the size
             // of the screen
-            .with_move(-screen_width() / 1.25, 0.0)
+            .with_move(-screen_width() * START_SPEED_RATIO, 0.0)
             .with_render(DEFAULT_SIZE, DEFAULT_SIZE, RED),
     );
 
-    let time = get_frame_time();
     let mut score = 0.0;
+    let mut elapsed = 0.0;
 
     loop {
         clear_background(DARKGREEN);
 
         if !gameover {
-            score += get_frame_time() * 100.0;
+            let dt = get_frame_time();
+            score += dt * 100.0;
+            elapsed += dt;
             let input = Input {
-                dt: time,
+                dt,
                 is_jump: !gameover && is_key_pressed(KeyCode::Space),
             };
+
+            let speed_ratio =
+                (START_SPEED_RATIO + SPEED_RAMP_PER_SEC * elapsed).min(MAX_SPEED_RATIO);
+            if let Some(ref mut movement) = world.find_mut(enemy_id).unwrap().movement {
+                movement.velocity.x = -screen_width() * speed_ratio;
+            }
+
             let Some(ref c) = world.find(player_id).unwrap().collide else {
                 continue;
             };
@@ -89,6 +104,7 @@ async fn main() {
             render_text(&mut world, text, 50.0, &pos, RED);
             if is_key_pressed(KeyCode::Space) {
                 score = 0.0;
+                elapsed = 0.0;
                 gameover = false;
                 world.find_mut(player_id).unwrap().set_position(-100.0, 0.0);
                 world

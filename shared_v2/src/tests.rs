@@ -83,6 +83,20 @@ mod tests {
         }
     }
 
+    #[test]
+    fn despawn_dead_removes_only_dead_entities() {
+        let mut world = World::new()
+            .spawn(make_entity(Tag::Player))
+            .spawn(make_entity(Tag::Enemy))
+            .spawn(make_entity(Tag::Enemy));
+
+        world.entities[1].alive = false;
+        world.despawn_dead();
+
+        assert_eq!(world.entities.len(), 2);
+        assert!(world.entities.iter().all(|e| e.alive));
+    }
+
     // -----------------------------
     // Resource Tests
     // -----------------------------

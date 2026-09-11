@@ -43,6 +43,9 @@ pub enum Tag {
     Enemy,
     Body,
     Food,
+    Ball,
+    Brick,
+    Bullet,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -68,6 +71,7 @@ pub struct Attack {
 
 pub struct Entity {
     pub transform: Rect,
+    pub alive: bool,
 
     pub tag: Option<Tag>,
 
@@ -175,6 +179,12 @@ impl World {
             .and_then(|r| r.downcast_ref::<T>())
     }
 
+    // Removes every entity whose `alive` flag has been cleared. Call once per
+    // frame after update systems; indices held across this call are invalid.
+    pub fn despawn_dead(&mut self) {
+        self.entities.retain(|e| e.alive);
+    }
+
     pub fn get_resource_mut<T: 'static>(&mut self) -> Option<&mut T> {
         self.resources
             .get_mut(&TypeId::of::<T>())
@@ -225,6 +235,7 @@ impl Entity {
     pub fn new(rect: Rect) -> Self {
         Self {
             transform: rect,
+            alive: true,
             tag: None,
             render: None,
             current_sprite: None,

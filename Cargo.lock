@@ -35,6 +35,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
+name = "breakout"
+version = "0.1.0"
+dependencies = [
+ "macroquad",
+ "shared_v2",
+]
+
+[[package]]
 name = "bytemuck"
 version = "1.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -147,6 +155,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "invaders"
+version = "0.1.0"
+dependencies = [
+ "macroquad",
+ "shared_v2",
+]
+
+[[package]]
 name = "jumper"
 version = "0.1.0"
 dependencies = [
@@ -246,6 +262,14 @@ dependencies = [
  "fdeflate",
  "flate2",
  "miniz_oxide",
+]
+
+[[package]]
+name = "pong"
+version = "0.1.0"
+dependencies = [
+ "macroquad",
+ "shared_v2",
 ]
 
 [[package]]

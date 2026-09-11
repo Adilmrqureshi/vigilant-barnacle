@@ -61,6 +61,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
+name = "climber"
+version = "0.1.0"
+dependencies = [
+ "macroquad",
+ "shared_v2",
+]
+
+[[package]]
 name = "color_quant"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -125,6 +133,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "frogger"
+version = "0.1.0"
+dependencies = [
+ "macroquad",
+ "shared_v2",
+]
+
+[[package]]
+name = "game2048"
+version = "0.1.0"
+dependencies = [
+ "macroquad",
+ "shared_v2",
+]
+
+[[package]]
 name = "glam"
 version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -168,6 +192,14 @@ version = "0.1.0"
 dependencies = [
  "macroquad",
  "shared",
+]
+
+[[package]]
+name = "lander"
+version = "0.1.0"
+dependencies = [
+ "macroquad",
+ "shared_v2",
 ]
 
 [[package]]
@@ -305,6 +337,14 @@ name = "simd-adler32"
 version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e320a6c5ad31d271ad523dcf3ad13e2767ad8b1cb8f047f75a8aeaf8da139da2"
+
+[[package]]
+name = "simon"
+version = "0.1.0"
+dependencies = [
+ "macroquad",
+ "shared_v2",
+]
 
 [[package]]
 name = "snake"

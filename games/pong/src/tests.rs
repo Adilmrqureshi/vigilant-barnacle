@@ -12,6 +12,7 @@ mod tests {
         let mut world = World::new();
         spawn_initial(&mut world);
         world.insert_resource(Scores { player: 0, cpu: 0 });
+        world.insert_resource(AiBrain::new());
         world
     }
 
@@ -82,6 +83,37 @@ mod tests {
 
         let after = world.with_tag(Tag::Enemy).next().unwrap().transform.y;
         assert!(after < before);
+    }
+
+    #[test]
+    fn confused_ai_moves_away_from_ball() {
+        let mut world = pong_world();
+        let mut state = GameState::new();
+
+        {
+            let ball = ball_mut(&mut world);
+            ball.transform.y = 0.0;
+        }
+        world.get_resource_mut::<AiBrain>().unwrap().error_timer = 1.0;
+        let before = world.with_tag(Tag::Enemy).next().unwrap().transform.y;
+
+        ai_system(&mut world, &mut state, &frame_input());
+
+        let after = world.with_tag(Tag::Enemy).next().unwrap().transform.y;
+        assert!(after > before);
+    }
+
+    #[test]
+    fn ai_error_wears_off() {
+        let mut world = pong_world();
+        let mut state = GameState::new();
+
+        world.get_resource_mut::<AiBrain>().unwrap().error_timer = 1.0 / 120.0;
+
+        ai_system(&mut world, &mut state, &frame_input());
+
+        let brain = world.get_resource::<AiBrain>().unwrap();
+        assert!(brain.error_timer <= 0.0);
     }
 
     // -----------------------------

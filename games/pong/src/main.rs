@@ -10,6 +10,9 @@ const PADDLE_H: f32 = 96.0;
 const PADDLE_MARGIN: f32 = 24.0;
 const PADDLE_SPEED: f32 = 380.0;
 const AI_SPEED: f32 = 260.0;
+const AI_DECISION_INTERVAL: f32 = 0.25;
+const AI_ERROR_CHANCE: f32 = 0.05;
+const AI_ERROR_DURATION: f32 = 0.4;
 const BALL_SIZE: f32 = 16.0;
 const BALL_SPEED: f32 = 320.0;
 const BALL_SPEEDUP: f32 = 1.05;
@@ -27,6 +30,22 @@ const BALL_COLOR: Color = WHITE;
 pub struct Scores {
     pub player: u32,
     pub cpu: u32,
+}
+
+// Resource: makes the CPU fallible. Every AI_DECISION_INTERVAL it has an
+// AI_ERROR_CHANCE of chasing the wrong direction for AI_ERROR_DURATION.
+pub struct AiBrain {
+    pub decision_timer: f32,
+    pub error_timer: f32,
+}
+
+impl AiBrain {
+    pub fn new() -> Self {
+        Self {
+            decision_timer: AI_DECISION_INTERVAL,
+            error_timer: 0.0,
+        }
+    }
 }
 
 fn clamp_paddle(rect: &mut Rect) {
@@ -63,9 +82,31 @@ fn ai_system(world: &mut World, _state: &mut GameState, input: &Input) {
         return;
     };
 
+    let confused = world
+        .get_resource_mut::<AiBrain>()
+        .map(|brain| {
+            brain.decision_timer -= input.dt;
+            if brain.decision_timer <= 0.0 {
+                brain.decision_timer = AI_DECISION_INTERVAL;
+                if brain.error_timer <= 0.0 && rand::gen_range(0.0, 1.0) < AI_ERROR_CHANCE {
+                    brain.error_timer = AI_ERROR_DURATION;
+                }
+            }
+            if brain.error_timer > 0.0 {
+                brain.error_timer -= input.dt;
+                true
+            } else {
+                false
+            }
+        })
+        .unwrap_or(false);
+
     for paddle in world.with_tag_mut(Tag::Enemy) {
         let paddle_cy = paddle.transform.y + paddle.transform.h / 2.0;
-        let diff = ball_cy - paddle_cy;
+        let mut diff = ball_cy - paddle_cy;
+        if confused {
+            diff = -diff;
+        }
         let step = AI_SPEED * input.dt;
         paddle.transform.y += diff.clamp(-step, step);
         clamp_paddle(&mut paddle.transform);
@@ -288,6 +329,7 @@ fn restart_game(game: &mut Game, input: &Input) {
         game.world.entities.clear();
         spawn_initial(&mut game.world);
         game.world.insert_resource(Scores { player: 0, cpu: 0 });
+        game.world.insert_resource(AiBrain::new());
         game.state.game_over = false;
     }
 }
@@ -297,6 +339,7 @@ async fn main() {
     let mut world = World::new();
     spawn_initial(&mut world);
     world.insert_resource(Scores { player: 0, cpu: 0 });
+    world.insert_resource(AiBrain::new());
 
     let mut game = Game::new(world)
         .with_update_systems(vec![

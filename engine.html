@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="How a small hand-built ECS-style engine in Rust makes every game on this site only a few hundred lines." />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
+    <title>The Engine — Mamunur Qureshi</title>
+</head>
+<body>
+    <header>
+        <p class="badge">DEV LOG</p>
+        <h1>The Engine Behind the Games</h1>
+        <p class="tagline">Every game on this site is only a few hundred lines of Rust. Not because they're simple &mdash; because of the engine underneath them.</p>
+        <nav class="hero-links">
+            <a class="hero-link" href="./index.html">&#8592; Back to the games</a>
+        </nav>
+    </header>
+    <main class="prose">
+        <section>
+            <h3>Why build an engine?</h3>
+            <p>
+                The hard part of making a game isn't the game &mdash; it's everything around it:
+                how entities are represented, how behaviour is organised, how state is shared,
+                how any of it gets tested. I spent the hours (many, many hours) thinking that
+                through <em>once</em>, in a small ECS-style engine, so that every game after it
+                became cheap to build.
+            </p>
+            <div class="stat-row">
+                <div class="stat"><span class="stat-num">~340</span><span class="stat-label">lines of engine</span></div>
+                <div class="stat"><span class="stat-num">300&ndash;400</span><span class="stat-label">lines per game</span></div>
+                <div class="stat"><span class="stat-num">75+</span><span class="stat-label">unit tests</span></div>
+            </div>
+            <p>
+                Snake, Pong, Breakout and Space Invaders were each built in a sitting &mdash;
+                complete with rendering, UI, restart flow and a test suite &mdash; because the
+                engine already answers the structural questions. Below are the ideas it's built on.
+            </p>
+        </section>
+
+        <section>
+            <h3>1. Entities are just data</h3>
+            <p>
+                There is no class hierarchy. An entity is a rectangle plus a set of
+                <em>optional components</em> &mdash; have them or don't. A paddle is an entity
+                with a render colour. A ball is the same thing plus physics. Composition over
+                inheritance, assembled with a builder:
+            </p>
+            <pre><code>let ball = Entity::new(rect)
+    .with_tag(Tag::Ball)
+    .with_render(WHITE)
+    .with_physics(Physics::new());</code></pre>
+        </section>
+
+        <section>
+            <h3>2. Tags and queries</h3>
+            <p>
+                Games never walk raw entity lists. They ask the world for what they care about,
+                and get an iterator back. One line of engine code replaces a filter loop in
+                every system of every game:
+            </p>
+            <pre><code>for enemy in world.with_tag_mut(Tag::Enemy) {
+    enemy.transform.x -= speed * input.dt;
+}</code></pre>
+        </section>
+
+        <section>
+            <h3>3. Systems are plain functions</h3>
+            <p>
+                All behaviour lives in free functions with one shape:
+                <code>fn(&amp;mut World, &amp;mut GameState, &amp;Input)</code>.
+                No traits, no scheduling framework, no magic. A game <em>is</em> a list of
+                these functions, run in order every frame:
+            </p>
+            <pre><code>let game = Game::new(world)
+    .with_update_systems(vec![
+        direction_system,
+        movement_system,
+        food_system,
+        collision_system,
+    ])
+    .with_render_systems(vec![render_board, ui_system]);</code></pre>
+            <p>
+                That list is the whole architecture of a game. Reading it top to bottom tells
+                you exactly what happens each frame, in what order.
+            </p>
+        </section>
+
+        <section>
+            <h3>4. Resources: shared state without globals</h3>
+            <p>
+                Not everything is an entity. Pong's two scores, Snake's direction and step
+                timer, the Invaders fleet's marching direction &mdash; that's game-wide state.
+                The engine stores it in a type-indexed map (<code>TypeId &rarr; Box&lt;dyn Any&gt;</code>),
+                so any system can look state up <em>by its type</em>, safely:
+            </p>
+            <pre><code>world.insert_resource(Scores { player: 0, cpu: 0 });
+
+if let Some(scores) = world.get_resource_mut::&lt;Scores&gt;() {
+    scores.player += 1;
+}</code></pre>
+        </section>
+
+        <section>
+            <h3>5. Input is data, so everything is testable</h3>
+            <p>
+                Systems never touch the keyboard. The main loop samples input once per frame
+                into a plain struct (including the frame's delta time), and systems consume
+                that. The payoff: every mechanic runs headless. A test builds a world, fakes
+                an input, calls the system directly &mdash; no window, no GPU:
+            </p>
+            <pre><code>#[test]
+fn cannot_reverse_into_itself() {
+    let mut world = snake_world();
+    let input = Input { left: true, ..Default::default() };
+
+    direction_system(&amp;mut world, &amp;mut state, &amp;input);
+
+    assert_eq!(snake.next_dir, Dir::Right); // ignored!
+}</code></pre>
+            <p>
+                Every game ships with a test suite like this, and they all run in CI on every
+                pull request.
+            </p>
+        </section>
+
+        <section>
+            <h3>6. Lifecycle: the dead-flag pattern</h3>
+            <p>
+                Removing entities mid-frame invalidates every index into the world, so nothing
+                is ever removed mid-frame. Systems just mark entities dead; one engine call
+                sweeps them up afterwards. Breakout's bricks and Invaders' bullets both live
+                and die through this:
+            </p>
+            <pre><code>brick.alive = false;   // any system, any time
+world.despawn_dead();  // one safe sweep</code></pre>
+        </section>
+
+        <section>
+            <h3>The result</h3>
+            <p>
+                The engine is ~340 lines. It doesn't try to be Bevy or Unity &mdash; it makes
+                exactly one promise: <em>a new game costs an afternoon, not a rewrite.</em>
+                Each of the games on the homepage is a single file you can read top to bottom,
+                and each one exercised the engine enough to grow it a little: Snake added
+                directional input, Breakout added the dead-flag sweep, Pong added a second
+                score. Hours into the engine so that minutes go into the games.
+            </p>
+            <nav class="hero-links">
+                <a class="hero-link" href="./index.html">Play the games</a>
+                <a class="hero-link" href="./games/spacecv/index.html">Get to know me</a>
+            </nav>
+        </section>
+    </main>
+    <footer>
+        <p>Built with Rust · macroquad · WebAssembly</p>
+    </footer>
+</body>
+</html>

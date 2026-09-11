@@ -55,6 +55,126 @@ h1 {
   margin: 0 auto;
 }
 
+.hero-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.hero-link {
+  color: var(--accent);
+  background-color: var(--surface);
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  font-size: 0.65rem;
+  line-height: 1.6;
+  padding: 12px 16px;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.hero-link:hover,
+.hero-link:focus-visible {
+  background-color: var(--accent);
+  color: var(--bg);
+}
+
+.hero-link:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Long-form pages (engine.html) */
+.prose {
+  text-align: left;
+  max-width: 44rem;
+  margin: 0 auto;
+}
+
+.prose section {
+  margin: 0 0 48px;
+  display: block;
+}
+
+.prose h3 {
+  color: var(--accent);
+  font-size: 0.85rem;
+  line-height: 1.8;
+  margin: 48px 0 16px;
+}
+
+.prose p {
+  font-size: 0.7rem;
+  line-height: 2.2;
+  color: var(--text);
+}
+
+.prose em {
+  color: var(--accent);
+  font-style: normal;
+}
+
+.prose code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+  background-color: var(--surface);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.prose pre {
+  background-color: var(--surface);
+  border: 2px solid var(--surface-hover);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 20px;
+  overflow-x: auto;
+}
+
+.prose pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.prose .hero-links {
+  justify-content: flex-start;
+}
+
+.stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 32px 0;
+}
+
+.stat {
+  flex: 1 1 140px;
+  background-color: var(--surface);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 20px 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stat-num {
+  color: var(--accent);
+  font-size: 1.1rem;
+}
+
+.stat-label {
+  color: var(--muted);
+  font-size: 0.55rem;
+  line-height: 1.6;
+}
+
 .section-title {
   font-size: 0.9rem;
   margin: 48px 0 32px;
@@ -128,16 +248,22 @@ h1 {
   background-color: hsl(0deg 0% 0% / 0.25);
 }
 
+/* Pixel-art square shooter: yellow player, falling green squares, bullet. */
 .dodger {
-  background-image: url("./assets/square-dodger.png");
+  background-size: cover;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' shape-rendering='crispEdges'%3E%3Crect width='10' height='10' fill='%23101018'/%3E%3Cg fill='%234dbf63'%3E%3Crect x='1.5' y='1' width='1.6' height='1.6'/%3E%3Crect x='4.6' y='2.2' width='2.2' height='2.2'/%3E%3Crect x='8' y='0.8' width='1.2' height='1.2'/%3E%3C/g%3E%3Crect x='5.35' y='5.8' width='0.5' height='0.5' fill='%2373a0ff'/%3E%3Crect x='4.8' y='7.4' width='1.6' height='1.6' fill='%23f2d94c'/%3E%3C/svg%3E");
 }
 
+/* Pixel-art desert runner: dusk sky, dunes, runner and snake. */
 .desert {
-  background-image: url("./assets/desert-runner.png");
+  background-size: cover;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' shape-rendering='crispEdges'%3E%3Crect width='10' height='10' fill='%2333415e'/%3E%3Crect x='7' y='1.2' width='1.2' height='1.2' fill='%23f2d9a0'/%3E%3Crect y='6' width='10' height='4' fill='%23c9975a'/%3E%3Crect y='8.5' width='10' height='1.5' fill='%23a87b45'/%3E%3Crect x='2.5' y='4' width='0.7' height='0.6' fill='%233a2a20'/%3E%3Crect x='2.4' y='4.6' width='0.9' height='1.4' fill='%233a2a20'/%3E%3Crect x='6.5' y='7.4' width='1.6' height='0.6' fill='%233f9e46'/%3E%3Crect x='8.1' y='7.2' width='0.5' height='0.8' fill='%233f9e46'/%3E%3C/svg%3E");
 }
 
+/* Pixel-art yellow jumper: dark sky, slate ground, jumper and enemy. */
 .jumper {
-  background-image: url("./assets/yellow-jumper.png");
+  background-size: cover;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' shape-rendering='crispEdges'%3E%3Crect width='10' height='10' fill='%23101018'/%3E%3Crect y='7.5' width='10' height='2.5' fill='%23232a40'/%3E%3Crect x='2.4' y='4.2' width='1.6' height='1.6' fill='%23f2d94c'/%3E%3Crect x='6.4' y='5.9' width='1.6' height='1.6' fill='%23e64d4d'/%3E%3C/svg%3E");
 }
 
 .bee {
@@ -148,9 +274,10 @@ h1 {
   background-image: url("./assets/speed.png");
 }
 
+/* Pixel-art ship dodger: starfield, player ship, descending enemies. */
 .shooter {
-  background-image: url("./assets/shooter.png");
   background-size: cover;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' shape-rendering='crispEdges'%3E%3Crect width='10' height='10' fill='%2305060a'/%3E%3Cg fill='%23d0d8e8'%3E%3Crect x='1.5' y='1.5' width='0.2' height='0.2'/%3E%3Crect x='8' y='2' width='0.2' height='0.2'/%3E%3Crect x='3' y='4.5' width='0.2' height='0.2'/%3E%3Crect x='6.5' y='6' width='0.2' height='0.2'/%3E%3Crect x='2' y='7.5' width='0.2' height='0.2'/%3E%3Crect x='8.5' y='8' width='0.2' height='0.2'/%3E%3C/g%3E%3Cg fill='%23c973b3'%3E%3Crect x='2.8' y='1.8' width='1.4' height='0.9'/%3E%3Crect x='6' y='3' width='1.4' height='0.9'/%3E%3C/g%3E%3Cg fill='%2373e68c'%3E%3Crect x='4.7' y='6.8' width='0.6' height='0.6'/%3E%3Crect x='4.3' y='7.4' width='1.4' height='0.9'/%3E%3Crect x='3.8' y='8.3' width='2.4' height='0.5'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* Pixel-art snake drawn inline so it needs no image asset. */

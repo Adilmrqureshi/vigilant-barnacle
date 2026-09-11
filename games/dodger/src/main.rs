@@ -2,6 +2,11 @@ use macroquad::prelude::*;
 
 const MOVEMENT_SPEED: f32 = 200.0;
 const RADIUS: f32 = 16.0;
+const MARGIN: f32 = 24.0;
+
+const BG_COLOR: Color = Color::new(0.06, 0.06, 0.10, 1.0);
+const BOARD_COLOR: Color = Color::new(0.10, 0.10, 0.16, 1.0);
+const BORDER_COLOR: Color = Color::new(0.40, 0.40, 0.60, 1.0);
 
 struct Shape {
     size: f32,
@@ -30,8 +35,15 @@ impl Shape {
 async fn main() {
     rand::srand(miniquad::date::now() as u64);
     let mut gameover = false;
-    let screen_boundary_x = screen_width() - RADIUS;
-    let screen_boundary_y = screen_height() - RADIUS;
+    // Playfield: the screen inset by MARGIN, framed like the newer games.
+    let field = Rect {
+        x: MARGIN,
+        y: MARGIN,
+        w: screen_width() - MARGIN * 2.0,
+        h: screen_height() - MARGIN * 2.0,
+    };
+    let screen_boundary_x = field.x + field.w - RADIUS;
+    let screen_boundary_y = field.y + field.h - RADIUS;
     let mut squares: Vec<Shape> = vec![];
     let mut bullets: Vec<Shape> = vec![];
     let mut circle = Shape {
@@ -43,7 +55,16 @@ async fn main() {
     };
 
     loop {
-        clear_background(DARKPURPLE);
+        clear_background(BG_COLOR);
+        draw_rectangle(field.x, field.y, field.w, field.h, BOARD_COLOR);
+        draw_rectangle_lines(
+            field.x - 2.0,
+            field.y - 2.0,
+            field.w + 4.0,
+            field.h + 4.0,
+            4.0,
+            BORDER_COLOR,
+        );
 
         let delta_time = get_frame_time();
         if !gameover {
@@ -68,16 +89,16 @@ async fn main() {
                     hit: false,
                 })
             }
-            circle.x = clamp(circle.x, circle.size / 2.0, screen_boundary_x);
-            circle.y = clamp(circle.y, circle.size / 2.0, screen_boundary_y);
+            circle.x = clamp(circle.x, field.x + circle.size / 2.0, screen_boundary_x);
+            circle.y = clamp(circle.y, field.y + circle.size / 2.0, screen_boundary_y);
 
             if rand::gen_range(0, 99) >= 95 {
                 let size = rand::gen_range(16.0, 64.0);
                 squares.push(Shape {
                     size,
                     speed: rand::gen_range(50.0, 150.0),
-                    x: rand::gen_range(size / 2.0, screen_width() - size / 2.0),
-                    y: -size,
+                    x: rand::gen_range(field.x + size / 2.0, field.x + field.w - size / 2.0),
+                    y: field.y - size,
                     hit: false,
                 });
             }
@@ -100,8 +121,8 @@ async fn main() {
             }
         }
 
-        squares.retain(|square| square.y < screen_height() + square.size);
-        bullets.retain(|bullet| bullet.y > 0.0);
+        squares.retain(|square| square.y < field.y + field.h + square.size);
+        bullets.retain(|bullet| bullet.y > field.y);
 
         squares.retain(|square| !square.hit);
         bullets.retain(|bullet| !bullet.hit);

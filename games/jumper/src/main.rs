@@ -2,6 +2,12 @@ use macroquad::prelude::*;
 use shared::{Entity, Input, Transform, World, render_text};
 
 const DEFAULT_SIZE: f32 = 64.0;
+const MARGIN: f32 = 24.0;
+
+const BG_COLOR: Color = Color::new(0.06, 0.06, 0.10, 1.0);
+const BOARD_COLOR: Color = Color::new(0.10, 0.10, 0.16, 1.0);
+const BORDER_COLOR: Color = Color::new(0.40, 0.40, 0.60, 1.0);
+const GROUND_COLOR: Color = Color::new(0.16, 0.19, 0.30, 1.0);
 
 // Enemy speed as a fraction of screen width per second: starts at a medium
 // pace and ramps up the longer a run lasts, capped so it stays beatable.
@@ -45,8 +51,26 @@ async fn main() {
     let mut score = 0.0;
     let mut elapsed = 0.0;
 
+    // Playfield frame in world coordinates: the visible area inset by MARGIN.
+    // The camera is centred on the world origin set above (0, 200), y-up.
+    let field = Rect {
+        x: -screen_width() / 2.0 + MARGIN,
+        y: 200.0 - screen_height() / 2.0 + MARGIN,
+        w: screen_width() - MARGIN * 2.0,
+        h: screen_height() - MARGIN * 2.0,
+    };
+
     loop {
-        clear_background(DARKGREEN);
+        clear_background(BG_COLOR);
+        draw_rectangle(field.x, field.y, field.w, field.h, BOARD_COLOR);
+        draw_rectangle_lines(
+            field.x - 2.0,
+            field.y - 2.0,
+            field.w + 4.0,
+            field.h + 4.0,
+            4.0,
+            BORDER_COLOR,
+        );
 
         if !gameover {
             let dt = get_frame_time();
@@ -83,13 +107,14 @@ async fn main() {
         }
 
         world.render();
-        draw_rectangle(-screen_width() / 2.0, -100.0, screen_width(), 100.0, BLUE);
+        // Ground: from the bottom of the frame up to y = 0.
+        draw_rectangle(field.x, field.y, field.w, -field.y, GROUND_COLOR);
 
         let text = format!("{:.0}", score);
         let text_dimensions = measure_text(&text, None, 50, 1.0);
         let score_pos = Transform {
-            x: 10.0,
-            y: 10.0 + text_dimensions.height,
+            x: MARGIN + 10.0,
+            y: MARGIN + 10.0 + text_dimensions.height,
         };
         render_text(&mut world, &text, 40.0, &score_pos, WHITE);
 

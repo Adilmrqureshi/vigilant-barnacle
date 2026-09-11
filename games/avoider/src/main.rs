@@ -131,6 +131,10 @@ fn collision_system(world: &mut World, state: &mut GameState, _input: &Input) {
 fn ui_system(_world: &World, state: &GameState) {
     set_default_camera();
 
+    let help = "SPACE: jump - A: attack";
+    let help_dims = measure_text(help, None, 24, 1.0);
+    draw_text(help, screen_width() - help_dims.width - 16.0, 30.0, 24.0, BLACK);
+
     if state.game_over {
         let text = "GAME OVER!";
         let text_dimensions = measure_text(text, None, 50, 1.0);

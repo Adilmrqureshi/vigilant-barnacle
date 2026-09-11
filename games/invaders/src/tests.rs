@@ -162,6 +162,37 @@ mod tests {
     // Hit Tests
     // -----------------------------
 
+    fn run_hit_pipeline(world: &mut World, state: &mut GameState) {
+        let input = frame_input();
+        hit_detection_system(world, state, &input);
+        hit_scoring_system(world, state, &input);
+        hit_despawn_system(world, state, &input);
+        player_hit_system(world, state, &input);
+    }
+
+    #[test]
+    fn overlap_emits_a_bullet_hit_event() {
+        let mut world = invaders_world();
+        let mut state = GameState::new();
+
+        let target = world.with_tag(Tag::Enemy).next().unwrap().transform;
+        spawn_bullet(
+            &mut world,
+            target.x + target.w / 2.0,
+            target.y,
+            -PLAYER_BULLET_SPEED,
+            PLAYER_BULLET_COLOR,
+        );
+
+        hit_detection_system(&mut world, &mut state, &frame_input());
+
+        let hits = world.events::<BulletHit>();
+        assert_eq!(hits.len(), 1);
+        // The event references entities by stable id, not index.
+        assert!(world.find(hits[0].invader).is_some());
+        assert!(world.find(hits[0].bullet).is_some());
+    }
+
     #[test]
     fn player_bullet_kills_invader_and_scores() {
         let mut world = invaders_world();
@@ -177,12 +208,40 @@ mod tests {
             PLAYER_BULLET_COLOR,
         );
 
-        hit_system(&mut world, &mut state, &frame_input());
+        run_hit_pipeline(&mut world, &mut state);
 
         assert_eq!(invader_count(&world), before - 1);
         assert_eq!(state.score, 1.0);
+        assert_eq!(world.get_resource::<Fleet>().unwrap().kills, 1);
         assert_eq!(bullet_count(&world), 0); // the shot is spent
         assert!(!state.game_over);
+    }
+
+    #[test]
+    fn one_bullet_kills_at_most_one_invader() {
+        let mut world = invaders_world();
+        let mut state = GameState::new();
+
+        // Stack two invaders on the same cell, one bullet through them.
+        let target = world.with_tag(Tag::Enemy).next().unwrap().transform;
+        {
+            let mut enemies = world.with_tag_mut(Tag::Enemy);
+            enemies.next();
+            let second = enemies.next().unwrap();
+            second.transform.x = target.x;
+            second.transform.y = target.y;
+        }
+        spawn_bullet(
+            &mut world,
+            target.x + target.w / 2.0,
+            target.y,
+            -PLAYER_BULLET_SPEED,
+            PLAYER_BULLET_COLOR,
+        );
+
+        hit_detection_system(&mut world, &mut state, &frame_input());
+
+        assert_eq!(world.events::<BulletHit>().len(), 1);
     }
 
     #[test]
@@ -199,7 +258,7 @@ mod tests {
             ENEMY_BULLET_COLOR,
         );
 
-        hit_system(&mut world, &mut state, &frame_input());
+        run_hit_pipeline(&mut world, &mut state);
 
         assert!(state.game_over);
     }

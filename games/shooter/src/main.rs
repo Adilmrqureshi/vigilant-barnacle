@@ -191,6 +191,14 @@ async fn main() {
             },
         );
 
+        let help = "ARROWS: move - dodge the ships";
+        let help_dims = measure_text(help, None, 24, 1.0);
+        let help_pos = Transform {
+            x: screen_width() - help_dims.width - MARGIN - 10.0,
+            y: MARGIN + 10.0 + help_dims.height,
+        };
+        render_text(&mut world, help, 24.0, &help_pos, GRAY);
+
         ship_sprite.update();
         enemy_small_sprite.update();
         next_frame().await

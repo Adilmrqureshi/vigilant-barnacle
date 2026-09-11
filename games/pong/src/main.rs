@@ -74,32 +74,37 @@ fn player_input_system(world: &mut World, _state: &mut GameState, input: &Input)
 }
 
 fn ai_system(world: &mut World, _state: &mut GameState, input: &Input) {
-    let Some(ball_cy) = world
-        .with_tag(Tag::Ball)
-        .next()
-        .map(|b| b.transform.y + b.transform.h / 2.0)
-    else {
+    let Some((ball_cy, ball_incoming)) = world.with_tag(Tag::Ball).next().map(|b| {
+        (
+            b.transform.y + b.transform.h / 2.0,
+            b.physics.as_ref().is_some_and(|p| p.velocity.x > 0.0),
+        )
+    }) else {
         return;
     };
 
-    let confused = world
-        .get_resource_mut::<AiBrain>()
-        .map(|brain| {
-            brain.decision_timer -= input.dt;
-            if brain.decision_timer <= 0.0 {
-                brain.decision_timer = AI_DECISION_INTERVAL;
-                if brain.error_timer <= 0.0 && rand::gen_range(0.0, 1.0) < AI_ERROR_CHANCE {
-                    brain.error_timer = AI_ERROR_DURATION;
+    // Blunders only happen (and only tick down) while the ball is actually
+    // coming at the AI - flinching the wrong way with the ball at the other
+    // end of the court just looks broken.
+    let confused = ball_incoming
+        && world
+            .get_resource_mut::<AiBrain>()
+            .map(|brain| {
+                brain.decision_timer -= input.dt;
+                if brain.decision_timer <= 0.0 {
+                    brain.decision_timer = AI_DECISION_INTERVAL;
+                    if brain.error_timer <= 0.0 && rand::gen_range(0.0, 1.0) < AI_ERROR_CHANCE {
+                        brain.error_timer = AI_ERROR_DURATION;
+                    }
                 }
-            }
-            if brain.error_timer > 0.0 {
-                brain.error_timer -= input.dt;
-                true
-            } else {
-                false
-            }
-        })
-        .unwrap_or(false);
+                if brain.error_timer > 0.0 {
+                    brain.error_timer -= input.dt;
+                    true
+                } else {
+                    false
+                }
+            })
+            .unwrap_or(false);
 
     for paddle in world.with_tag_mut(Tag::Enemy) {
         let paddle_cy = paddle.transform.y + paddle.transform.h / 2.0;
@@ -261,6 +266,10 @@ fn ui_system(world: &World, state: &GameState) {
         48.0,
         CPU_COLOR,
     );
+
+    let help = "UP/DOWN or W/S: move your paddle - first to 7 wins";
+    let dims = measure_text(help, None, 20, 1.0);
+    draw_text(help, ox + (COURT_W - dims.width) / 2.0, oy + COURT_H + 26.0, 20.0, GRAY);
 
     if state.game_over {
         let text = if scores.player > scores.cpu {

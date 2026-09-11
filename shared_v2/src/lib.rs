@@ -70,6 +70,9 @@ pub struct Attack {
 }
 
 pub struct Entity {
+    // Stable identity, assigned by World::add. 0 means "never registered";
+    // entities pushed straight onto the Vec keep it and can't be found by id.
+    pub id: usize,
     pub transform: Rect,
     pub alive: bool,
 
@@ -87,6 +90,15 @@ pub struct World {
     pub entities: Vec<Entity>,
     pub sprites: Vec<Sprite>,
     resources: HashMap<TypeId, Box<dyn Any>>,
+    next_id: usize,
+    event_clearers: Vec<fn(&mut World)>,
+}
+
+// One-frame message queue. Systems emit during an update; any number of later
+// systems can read the same events; Game::update clears every queue at the
+// start of the next frame.
+pub struct Events<E> {
+    pub queue: Vec<E>,
 }
 
 pub struct GameState {
@@ -144,6 +156,52 @@ impl World {
             entities: vec![],
             sprites: vec![],
             resources: HashMap::new(),
+            next_id: 1,
+            event_clearers: vec![],
+        }
+    }
+
+    // Registers an entity with a stable id and returns it. Unlike a raw
+    // `entities.push`, entities added here can be looked up with find/find_mut
+    // even after despawn_dead() reshuffles indices.
+    pub fn add(&mut self, mut entity: Entity) -> usize {
+        let id = self.next_id;
+        self.next_id += 1;
+        entity.id = id;
+        self.entities.push(entity);
+        id
+    }
+
+    pub fn find(&self, id: usize) -> Option<&Entity> {
+        self.entities.iter().find(|e| e.id == id)
+    }
+
+    pub fn find_mut(&mut self, id: usize) -> Option<&mut Entity> {
+        self.entities.iter_mut().find(|e| e.id == id)
+    }
+
+    pub fn emit<E: 'static>(&mut self, event: E) {
+        if self.get_resource::<Events<E>>().is_none() {
+            self.insert_resource(Events::<E> { queue: vec![] });
+            self.event_clearers.push(|world: &mut World| {
+                if let Some(events) = world.get_resource_mut::<Events<E>>() {
+                    events.queue.clear();
+                }
+            });
+        }
+        self.get_resource_mut::<Events<E>>().unwrap().queue.push(event);
+    }
+
+    pub fn events<E: 'static>(&self) -> &[E] {
+        self.get_resource::<Events<E>>()
+            .map(|e| e.queue.as_slice())
+            .unwrap_or(&[])
+    }
+
+    pub fn clear_events(&mut self) {
+        let clearers = self.event_clearers.clone();
+        for clear in clearers {
+            clear(self);
         }
     }
 
@@ -165,7 +223,7 @@ impl World {
     }
 
     pub fn spawn(mut self, entity: Entity) -> Self {
-        self.entities.push(entity);
+        self.add(entity);
         self
     }
 
@@ -234,6 +292,7 @@ pub fn debug(entities: &[Entity]) {
 impl Entity {
     pub fn new(rect: Rect) -> Self {
         Self {
+            id: 0,
             transform: rect,
             alive: true,
             tag: None,
@@ -295,6 +354,8 @@ impl GameState {
 
 impl Game {
     pub fn update(&mut self, input: &Input) {
+        // Events emitted last frame have been seen by every system by now.
+        self.world.clear_events();
         for system in &self.systems.update {
             system(&mut self.world, &mut self.state, input);
         }

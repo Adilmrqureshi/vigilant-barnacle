@@ -85,15 +85,18 @@ mod tests {
         assert!(after < before);
     }
 
+    fn set_ball(world: &mut World, y: f32, vx: f32) {
+        let ball = ball_mut(world);
+        ball.transform.y = y;
+        ball.physics.as_mut().unwrap().velocity.x = vx;
+    }
+
     #[test]
-    fn confused_ai_moves_away_from_ball() {
+    fn confused_ai_moves_away_from_incoming_ball() {
         let mut world = pong_world();
         let mut state = GameState::new();
 
-        {
-            let ball = ball_mut(&mut world);
-            ball.transform.y = 0.0;
-        }
+        set_ball(&mut world, 0.0, 100.0); // heading toward the AI
         world.get_resource_mut::<AiBrain>().unwrap().error_timer = 1.0;
         let before = world.with_tag(Tag::Enemy).next().unwrap().transform.y;
 
@@ -104,10 +107,28 @@ mod tests {
     }
 
     #[test]
+    fn confusion_ignored_while_ball_moves_away() {
+        let mut world = pong_world();
+        let mut state = GameState::new();
+
+        set_ball(&mut world, 0.0, -100.0); // heading away from the AI
+        world.get_resource_mut::<AiBrain>().unwrap().error_timer = 1.0;
+        let before = world.with_tag(Tag::Enemy).next().unwrap().transform.y;
+
+        ai_system(&mut world, &mut state, &frame_input());
+
+        // Tracks the ball normally, and the error doesn't burn down either.
+        let after = world.with_tag(Tag::Enemy).next().unwrap().transform.y;
+        assert!(after < before);
+        assert_eq!(world.get_resource::<AiBrain>().unwrap().error_timer, 1.0);
+    }
+
+    #[test]
     fn ai_error_wears_off() {
         let mut world = pong_world();
         let mut state = GameState::new();
 
+        set_ball(&mut world, COURT_H / 2.0, 100.0);
         world.get_resource_mut::<AiBrain>().unwrap().error_timer = 1.0 / 120.0;
 
         ai_system(&mut world, &mut state, &frame_input());

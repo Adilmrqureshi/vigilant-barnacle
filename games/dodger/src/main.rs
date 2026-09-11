@@ -3,6 +3,7 @@ use macroquad::prelude::*;
 const MOVEMENT_SPEED: f32 = 200.0;
 const RADIUS: f32 = 16.0;
 const MARGIN: f32 = 24.0;
+const SHOOT_COOLDOWN: f32 = 0.4;
 
 const BG_COLOR: Color = Color::new(0.06, 0.06, 0.10, 1.0);
 const BOARD_COLOR: Color = Color::new(0.10, 0.10, 0.16, 1.0);
@@ -46,6 +47,7 @@ async fn main() {
     let screen_boundary_y = field.y + field.h - RADIUS;
     let mut squares: Vec<Shape> = vec![];
     let mut bullets: Vec<Shape> = vec![];
+    let mut shoot_timer = 0.0;
     let mut circle = Shape {
         size: 32.0,
         speed: MOVEMENT_SPEED,
@@ -80,7 +82,9 @@ async fn main() {
             if is_key_down(KeyCode::Up) {
                 circle.y -= MOVEMENT_SPEED * delta_time;
             }
-            if is_key_pressed(KeyCode::Space) {
+            shoot_timer -= delta_time;
+            if is_key_pressed(KeyCode::Space) && shoot_timer <= 0.0 {
+                shoot_timer = SHOOT_COOLDOWN;
                 bullets.push(Shape {
                     x: circle.x,
                     y: circle.y,

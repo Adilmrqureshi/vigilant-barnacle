@@ -147,6 +147,7 @@ pub struct Game {
 
 // Resources
 pub struct EnemyManager {
+    // The entity id (see World::add) of the enemy currently in play.
     pub active_enemy: Option<usize>,
 }
 

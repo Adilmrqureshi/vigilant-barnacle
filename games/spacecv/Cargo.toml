@@ -3,6 +3,20 @@ name = "spacecv"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+# The asset generator only builds when asked for, so the wasm deploy
+# (which globs every built .wasm) never sees a genart.wasm.
+genart = []
+
+[[bin]]
+name = "spacecv"
+path = "src/main.rs"
+
+[[bin]]
+name = "genart"
+path = "src/bin/genart.rs"
+required-features = ["genart"]
+
 [dependencies]
 macroquad = "0.4"
 shared_v2 = { path = "../../shared_v2" }

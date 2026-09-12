@@ -126,4 +126,124 @@ mod tests {
         }
         assert!(STATIONS.last().unwrap().at < JOURNEY_END);
     }
+
+    // -----------------------------
+    // Scene / Explore Tests
+    // -----------------------------
+
+    fn press_space() -> Input {
+        Input {
+            spacebar: true,
+            ..Default::default()
+        }
+    }
+
+    // E is mapped onto Input::a in main's input gathering.
+    fn press_e() -> Input {
+        Input {
+            a: true,
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn space_lands_on_the_station_in_range() {
+        let mut world = cv_world();
+        let mut state = GameState::new();
+        world.get_resource_mut::<Journey>().unwrap().distance = STATIONS[2].at;
+
+        scene_system(&mut world, &mut state, &press_space());
+
+        assert_eq!(scene(&world), Scene::Planet(2));
+    }
+
+    #[test]
+    fn cannot_land_between_stations() {
+        let mut world = cv_world();
+        let mut state = GameState::new();
+        world.get_resource_mut::<Journey>().unwrap().distance =
+            (STATIONS[0].at + STATIONS[1].at) / 2.0;
+
+        scene_system(&mut world, &mut state, &press_space());
+
+        assert_eq!(scene(&world), Scene::Space);
+    }
+
+    #[test]
+    fn e_returns_to_space() {
+        let mut world = cv_world();
+        let mut state = GameState::new();
+        *world.get_resource_mut::<Scene>().unwrap() = Scene::Planet(1);
+
+        scene_system(&mut world, &mut state, &press_e());
+
+        assert_eq!(scene(&world), Scene::Space);
+        let ship = world.with_tag(Tag::Player).next().unwrap();
+        assert_eq!(ship.transform.x, SHIP_X);
+    }
+
+    #[test]
+    fn travel_is_frozen_while_exploring() {
+        let mut world = cv_world();
+        let mut state = GameState::new();
+        *world.get_resource_mut::<Scene>().unwrap() = Scene::Planet(0);
+
+        travel_system(&mut world, &mut state, &one_second());
+
+        assert_eq!(distance(&world), 0.0);
+    }
+
+    #[test]
+    fn exploring_moves_the_ship_and_clamps_to_the_board() {
+        let mut world = cv_world();
+        let mut state = GameState::new();
+        *world.get_resource_mut::<Scene>().unwrap() = Scene::Planet(0);
+
+        let input = Input {
+            dt: 100.0,
+            right: true,
+            down: true,
+            ..Default::default()
+        };
+        explore_system(&mut world, &mut state, &input);
+
+        let ship = world.with_tag(Tag::Player).next().unwrap();
+        assert_eq!(ship.transform.x, BOARD_W - SHIP_W);
+        assert_eq!(ship.transform.y, SHIP_MAX_Y);
+    }
+
+    #[test]
+    fn explore_does_nothing_in_space() {
+        let mut world = cv_world();
+        let mut state = GameState::new();
+
+        let input = Input {
+            dt: 1.0,
+            right: true,
+            ..Default::default()
+        };
+        explore_system(&mut world, &mut state, &input);
+
+        let ship = world.with_tag(Tag::Player).next().unwrap();
+        assert_eq!(ship.transform.x, SHIP_X);
+    }
+
+    #[test]
+    fn beacon_activates_only_when_near() {
+        let p = &STATIONS[0].pois[0];
+        assert_eq!(active_poi(0, p.x, p.y), Some(0));
+        assert_eq!(active_poi(0, p.x + POI_RANGE + 1.0, p.y + POI_RANGE + 1.0), None);
+    }
+
+    #[test]
+    fn every_station_has_beacons_on_the_board() {
+        for s in &STATIONS {
+            assert!(s.pois.len() >= 2);
+            for p in s.pois {
+                assert!(p.x > 0.0 && p.x < BOARD_W);
+                assert!(p.y > 0.0 && p.y < 320.0, "keep beacons clear of the text panel");
+                assert!(!p.lines.is_empty());
+            }
+        }
+    }
 }

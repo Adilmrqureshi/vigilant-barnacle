@@ -97,6 +97,68 @@ mod tests {
         assert!(world.entities.iter().all(|e| e.alive));
     }
 
+    #[test]
+    fn add_assigns_unique_ids_and_find_survives_despawn() {
+        let mut world = World::new();
+        let a = world.add(make_entity(Tag::Player));
+        let b = world.add(make_entity(Tag::Enemy));
+        let c = world.add(make_entity(Tag::Enemy));
+        assert!(a != b && b != c);
+
+        world.find_mut(b).unwrap().alive = false;
+        world.despawn_dead();
+
+        // Indices shifted, but ids still resolve to the right entities.
+        assert!(world.find(b).is_none());
+        assert_eq!(world.find(a).unwrap().tag, Some(Tag::Player));
+        assert_eq!(world.find(c).unwrap().tag, Some(Tag::Enemy));
+    }
+
+    // -----------------------------
+    // Event Tests
+    // -----------------------------
+
+    struct Ping(u32);
+
+    #[test]
+    fn events_reach_multiple_readers() {
+        let mut world = World::new();
+        world.emit(Ping(1));
+        world.emit(Ping(2));
+
+        // Two independent reads see the same events.
+        assert_eq!(world.events::<Ping>().len(), 2);
+        assert_eq!(world.events::<Ping>()[1].0, 2);
+    }
+
+    #[test]
+    fn events_live_exactly_one_update() {
+        fn emitter(world: &mut World, _s: &mut GameState, _i: &Input) {
+            world.emit(Ping(7));
+        }
+        fn counter(world: &mut World, state: &mut GameState, _i: &Input) {
+            state.score += world.events::<Ping>().len() as f32;
+        }
+
+        let mut game = Game::new(World::new())
+            .with_update_system(emitter)
+            .with_update_system(counter);
+
+        let input = Input::default();
+        game.update(&input); // emit + read in the same frame
+        assert_eq!(game.state.score, 1.0);
+
+        game.systems.update.remove(0); // stop emitting
+        game.update(&input); // last frame's events were cleared
+        assert_eq!(game.state.score, 1.0);
+    }
+
+    #[test]
+    fn no_events_reads_as_empty() {
+        let world = World::new();
+        assert!(world.events::<Ping>().is_empty());
+    }
+
     // -----------------------------
     // Resource Tests
     // -----------------------------

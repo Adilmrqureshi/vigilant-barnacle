@@ -120,6 +120,21 @@ mod tests {
         assert!(world.entities[0].transform.x < 500.0);
     }
 
+    #[test]
+    fn score_accumulates_with_time() {
+        let mut world = World::new();
+        let mut state = GameState::new();
+
+        let input = Input {
+            dt: 1.0,
+            ..Default::default()
+        };
+        score_system(&mut world, &mut state, &input);
+        score_system(&mut world, &mut state, &input);
+
+        assert_eq!(state.score, 200.0);
+    }
+
     // -----------------------------
     // Collision Tests
     // -----------------------------
@@ -158,10 +173,11 @@ mod tests {
     #[test]
     fn does_not_spawn_if_enemy_still_visible() {
         let mut world = world_with_manager().spawn(enemy_entity(100.0));
+        let visible_id = world.entities[0].id;
 
         {
             let mgr = world.get_resource_mut::<EnemyManager>().unwrap();
-            mgr.active_enemy = Some(0);
+            mgr.active_enemy = Some(visible_id);
         }
 
         let mut state = GameState::new();
@@ -169,7 +185,7 @@ mod tests {
         enemy_spawn_system(&mut world, &mut state, &dummy_input());
 
         let mgr = world.get_resource::<EnemyManager>().unwrap();
-        assert_eq!(mgr.active_enemy, Some(0));
+        assert_eq!(mgr.active_enemy, Some(visible_id));
     }
 
     #[test]
@@ -177,17 +193,40 @@ mod tests {
         let mut world = world_with_manager()
             .spawn(enemy_entity(-500.0))
             .spawn(enemy_entity(-600.0));
+        let departed_id = world.entities[0].id;
 
         {
             let mgr = world.get_resource_mut::<EnemyManager>().unwrap();
-            mgr.active_enemy = Some(0);
+            mgr.active_enemy = Some(departed_id);
         }
 
         let mut state = GameState::new();
 
         enemy_spawn_system(&mut world, &mut state, &dummy_input());
 
+        // A new active enemy was picked and repositioned on screen by its id.
+        let mgr = world.get_resource::<EnemyManager>().unwrap();
+        let active = mgr.active_enemy.unwrap();
+        let enemy = world.find(active).unwrap();
+        assert!(enemy.transform.x > 0.0);
+    }
+
+    #[test]
+    fn stale_active_id_is_treated_as_gone() {
+        let mut world = world_with_manager().spawn(enemy_entity(-1000.0));
+
+        {
+            let mgr = world.get_resource_mut::<EnemyManager>().unwrap();
+            mgr.active_enemy = Some(9999); // id of an entity that no longer exists
+        }
+
+        let mut state = GameState::new();
+
+        enemy_spawn_system(&mut world, &mut state, &dummy_input());
+
+        // The dangling id didn't panic; a real enemy was activated instead.
         let mgr = world.get_resource::<EnemyManager>().unwrap();
         assert!(mgr.active_enemy.is_some());
+        assert_ne!(mgr.active_enemy, Some(9999));
     }
 }

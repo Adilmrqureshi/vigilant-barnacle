@@ -128,8 +128,18 @@ fn collision_system(world: &mut World, state: &mut GameState, _input: &Input) {
     }
 }
 
+fn score_system(_world: &mut World, state: &mut GameState, input: &Input) {
+    state.score += input.dt * 100.0;
+}
+
 fn ui_system(_world: &World, state: &GameState) {
     set_default_camera();
+
+    draw_text(&format!("{:.0}", state.score), 16.0, 40.0, 40.0, BLACK);
+
+    let help = "SPACE: jump - A: attack";
+    let help_dims = measure_text(help, None, 24, 1.0);
+    draw_text(help, screen_width() - help_dims.width - 16.0, 30.0, 24.0, BLACK);
 
     if state.game_over {
         let text = "GAME OVER!";
@@ -152,46 +162,37 @@ fn move_enemy_system(world: &mut World, _state: &mut GameState, input: &Input) {
 fn enemy_spawn_system(world: &mut World, _state: &mut GameState, input: &Input) {
     let screen_w = input.screen_width;
 
+    // active_enemy holds a stable entity id, so this stays correct even if
+    // the entity list is ever reordered or swept.
     let active_enemy = {
         world
             .get_resource::<EnemyManager>()
             .and_then(|m| m.active_enemy)
     };
 
-    let still_active = if let Some(idx) = active_enemy {
-        let e = &world.entities[idx];
-        e.transform.x > -GAME_SPRITE_SIZE 
-    } else {
-        false
-    };
+    let still_active = active_enemy
+        .and_then(|id| world.find(id))
+        .is_some_and(|e| e.transform.x > -GAME_SPRITE_SIZE);
 
     if still_active {
         return;
     }
 
-    let enemy_indices: Vec<_> = world
-        .entities
-        .iter()
-        .enumerate()
-        .filter(|(_, e)| e.tag == Some(Tag::Enemy))
-        .map(|(i, _)| i)
-        .collect();
+    let enemy_ids: Vec<usize> = world.with_tag(Tag::Enemy).map(|e| e.id).collect();
 
-    if enemy_indices.is_empty() {
+    if enemy_ids.is_empty() {
         return;
     }
 
-    let choice = rand::gen_range(0, enemy_indices.len() as i32) as usize;
-    let idx = enemy_indices[choice];
+    let choice = rand::gen_range(0, enemy_ids.len() as i32) as usize;
+    let id = enemy_ids[choice];
 
-    {
-        let enemy = &mut world.entities[idx];
+    if let Some(enemy) = world.find_mut(id) {
         enemy.transform.x = screen_w + rand::gen_range(0.0, screen_w);
     }
 
-    {
-        let manager = world.get_resource_mut::<EnemyManager>().unwrap();
-        manager.active_enemy = Some(idx);
+    if let Some(manager) = world.get_resource_mut::<EnemyManager>() {
+        manager.active_enemy = Some(id);
     }
 }
 
@@ -216,6 +217,7 @@ fn restart_game(game: &mut Game, input: &Input) {
         for enemy in game.world.with_tag_mut(Tag::Enemy) {
             enemy.transform.x += input.screen_width;
         }
+        game.state.score = 0.0;
         game.state.game_over = false;
     }
 }
@@ -318,6 +320,7 @@ async fn main() {
             collision_system,
             attack_system,
             enemy_spawn_system,
+            score_system,
         ])
         .with_render_systems(vec![render_sprites, ui_system]);
 

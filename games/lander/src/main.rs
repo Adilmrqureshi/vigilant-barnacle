@@ -223,6 +223,10 @@ fn ui_system(world: &World, state: &GameState) {
         }
     }
 
+    let help = "UP: thrust - LEFT/RIGHT: steer - land softly on the green pad";
+    let dims = measure_text(help, None, 20, 1.0);
+    draw_text(help, ox + (BOARD_W - dims.width) / 2.0, oy + BOARD_H + 26.0, 20.0, GRAY);
+
     if state.game_over {
         let text = if lander.won { "THE EAGLE HAS LANDED!" } else { "CRASHED!" };
         let dims = measure_text(text, None, 44, 1.0);

@@ -69,7 +69,7 @@ fn spawn_bullet(world: &mut World, x: f32, y: f32, vy: f32, color: Color) {
     if let Some(physics) = &mut bullet.physics {
         physics.velocity.y = vy;
     }
-    world.entities.push(bullet);
+    world.add(bullet);
 }
 
 fn bullet_vy(e: &Entity) -> f32 {
@@ -195,11 +195,20 @@ fn bullet_system(world: &mut World, _state: &mut GameState, input: &Input) {
     world.despawn_dead();
 }
 
-fn hit_system(world: &mut World, state: &mut GameState, _input: &Input) {
-    let player_shots: Vec<Rect> = world
+// Events: detection announces what happened; the consumers below decide
+// what it means. Anything else (sound, particles) can subscribe later
+// without touching detection.
+pub struct BulletHit {
+    pub bullet: usize,
+    pub invader: usize,
+}
+pub struct PlayerHit;
+
+fn hit_detection_system(world: &mut World, _state: &mut GameState, _input: &Input) {
+    let player_shots: Vec<(usize, Rect)> = world
         .with_tag(Tag::Bullet)
         .filter(|b| bullet_vy(b) < 0.0)
-        .map(|b| b.transform)
+        .map(|b| (b.id, b.transform))
         .collect();
     let enemy_shots: Vec<Rect> = world
         .with_tag(Tag::Bullet)
@@ -207,37 +216,61 @@ fn hit_system(world: &mut World, state: &mut GameState, _input: &Input) {
         .map(|b| b.transform)
         .collect();
 
-    let mut kills = 0;
-    let mut spent_shots: Vec<Rect> = vec![];
-    for invader in world.with_tag_mut(Tag::Enemy) {
-        if let Some(shot) = player_shots
+    let mut hits: Vec<BulletHit> = vec![];
+    for invader in world.with_tag(Tag::Enemy) {
+        let already_spent = |id: usize| hits.iter().any(|h| h.bullet == id);
+        if let Some((bullet, _)) = player_shots
             .iter()
-            .find(|s| s.overlaps(&invader.transform))
+            .find(|(id, s)| !already_spent(*id) && s.overlaps(&invader.transform))
         {
-            invader.alive = false;
-            spent_shots.push(*shot);
-            kills += 1;
+            hits.push(BulletHit {
+                bullet: *bullet,
+                invader: invader.id,
+            });
         }
+    }
+    for hit in hits {
+        world.emit(hit);
     }
 
     let player_hit = world
         .with_tag(Tag::Player)
         .any(|ship| enemy_shots.iter().any(|s| s.overlaps(&ship.transform)));
-
-    if kills > 0 {
-        state.score += kills as f32;
-        if let Some(fleet) = world.get_resource_mut::<Fleet>() {
-            fleet.kills += kills;
-        }
-        for bullet in world.with_tag_mut(Tag::Bullet) {
-            if spent_shots.iter().any(|s| *s == bullet.transform) {
-                bullet.alive = false;
-            }
-        }
-        world.despawn_dead();
-    }
-
     if player_hit {
+        world.emit(PlayerHit);
+    }
+}
+
+fn hit_scoring_system(world: &mut World, state: &mut GameState, _input: &Input) {
+    let kills = world.events::<BulletHit>().len() as u32;
+    if kills == 0 {
+        return;
+    }
+    state.score += kills as f32;
+    if let Some(fleet) = world.get_resource_mut::<Fleet>() {
+        fleet.kills += kills;
+    }
+}
+
+fn hit_despawn_system(world: &mut World, _state: &mut GameState, _input: &Input) {
+    let casualties: Vec<usize> = world
+        .events::<BulletHit>()
+        .iter()
+        .flat_map(|h| [h.bullet, h.invader])
+        .collect();
+    if casualties.is_empty() {
+        return;
+    }
+    for id in casualties {
+        if let Some(e) = world.find_mut(id) {
+            e.alive = false;
+        }
+    }
+    world.despawn_dead();
+}
+
+fn player_hit_system(world: &mut World, state: &mut GameState, _input: &Input) {
+    if !world.events::<PlayerHit>().is_empty() {
         state.game_over = true;
     }
 }
@@ -283,6 +316,10 @@ fn ui_system(world: &World, state: &GameState) {
 
     draw_text(&format!("SCORE {}", state.score as i32), ox, oy - 14.0, 32.0, WHITE);
 
+    let help = "LEFT/RIGHT or A/D: move - SPACE: shoot - clear the fleet";
+    let dims = measure_text(help, None, 20, 1.0);
+    draw_text(help, ox + (BOARD_W - dims.width) / 2.0, oy + BOARD_H + 26.0, 20.0, GRAY);
+
     if state.game_over {
         let won = world.get_resource::<Fleet>().is_some_and(|f| f.won);
         let text = if won { "YOU WIN!" } else { "GAME OVER!" };
@@ -308,7 +345,7 @@ fn ui_system(world: &World, state: &GameState) {
 }
 
 fn spawn_initial(world: &mut World) {
-    world.entities.push(
+    world.add(
         Entity::new(Rect {
             x: BOARD_W / 2.0 - SHIP_W / 2.0,
             y: SHIP_Y,
@@ -323,7 +360,7 @@ fn spawn_initial(world: &mut World) {
     let left = (BOARD_W - grid_w) / 2.0;
     for row in 0..INVADER_ROWS {
         for col in 0..INVADER_COLS {
-            world.entities.push(
+            world.add(
                 Entity::new(Rect {
                     x: left + col as f32 * INVADER_X_GAP,
                     y: INVADER_TOP + row as f32 * INVADER_Y_GAP,
@@ -360,7 +397,10 @@ async fn main() {
             enemy_fire_system,
             fleet_system,
             bullet_system,
-            hit_system,
+            hit_detection_system,
+            hit_scoring_system,
+            hit_despawn_system,
+            player_hit_system,
             win_system,
         ])
         .with_render_systems(vec![render_board, ui_system]);

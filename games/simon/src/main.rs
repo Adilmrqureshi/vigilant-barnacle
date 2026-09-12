@@ -194,6 +194,10 @@ fn ui_system(world: &World, state: &GameState) {
     let dims = measure_text(label, None, 26, 1.0);
     draw_text(label, ox + BOARD_W - dims.width, oy - 14.0, 26.0, GRAY);
 
+    let help = "repeat the sequence: UP=TL  RIGHT=TR  LEFT=BL  DOWN=BR";
+    let dims = measure_text(help, None, 20, 1.0);
+    draw_text(help, ox + (BOARD_W - dims.width) / 2.0, oy + BOARD_H + 26.0, 20.0, GRAY);
+
     if state.game_over {
         let text = "GAME OVER!";
         let dims = measure_text(text, None, 50, 1.0);

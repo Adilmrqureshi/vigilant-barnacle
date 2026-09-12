@@ -68,6 +68,16 @@ async fn main() {
             BORDER_COLOR,
         );
 
+        let help = "ARROWS: move - SPACE: shoot - dodge the squares";
+        let help_dims = measure_text(help, None, 20, 1.0);
+        draw_text(
+            help,
+            field.x + field.w - help_dims.width - 10.0,
+            field.y + 24.0,
+            20.0,
+            GRAY,
+        );
+
         let delta_time = get_frame_time();
         if !gameover {
             if is_key_down(KeyCode::Right) {

@@ -185,6 +185,10 @@ fn ui_system(world: &World, state: &GameState) {
         let dims = measure_text(&lives, None, 32, 1.0);
         draw_text(&lives, ox + BOARD_W - dims.width, oy - 14.0, 32.0, WHITE);
 
+        let help = "LEFT/RIGHT or A/D: move - clear every brick";
+        let dims = measure_text(help, None, 20, 1.0);
+        draw_text(help, ox + (BOARD_W - dims.width) / 2.0, oy + BOARD_H + 26.0, 20.0, GRAY);
+
         if state.game_over {
             let text = if breakout.won { "YOU WIN!" } else { "GAME OVER!" };
             let dims = measure_text(text, None, 50, 1.0);

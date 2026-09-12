@@ -144,6 +144,10 @@ fn ui_system(_world: &World, state: &GameState) {
 
     draw_text(&format!("HEIGHT {}", state.score as i32), ox, oy - 14.0, 32.0, WHITE);
 
+    let help = "LEFT/RIGHT or A/D: steer - bounce up, don't fall";
+    let dims = measure_text(help, None, 20, 1.0);
+    draw_text(help, ox + (BOARD_W - dims.width) / 2.0, oy + BOARD_H + 26.0, 20.0, GRAY);
+
     if state.game_over {
         let text = "YOU FELL!";
         let dims = measure_text(text, None, 50, 1.0);

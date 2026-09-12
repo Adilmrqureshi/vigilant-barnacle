@@ -118,6 +118,14 @@ async fn main() {
         };
         render_text(&mut world, &text, 40.0, &score_pos, WHITE);
 
+        let help = "SPACE: jump the red square";
+        let help_dims = measure_text(help, None, 24, 1.0);
+        let help_pos = Transform {
+            x: screen_width() - help_dims.width - MARGIN - 10.0,
+            y: MARGIN + 10.0 + help_dims.height,
+        };
+        render_text(&mut world, help, 24.0, &help_pos, GRAY);
+
         if gameover {
             let text = "GAME OVER!";
             let text_dimensions = measure_text(text, None, 50, 1.0);

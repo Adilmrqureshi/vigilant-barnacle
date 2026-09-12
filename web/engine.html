@@ -30,9 +30,9 @@
                 became cheap to build.
             </p>
             <div class="stat-row">
-                <div class="stat"><span class="stat-num">~340</span><span class="stat-label">lines of engine</span></div>
+                <div class="stat"><span class="stat-num">~400</span><span class="stat-label">lines of engine</span></div>
                 <div class="stat"><span class="stat-num">300&ndash;400</span><span class="stat-label">lines per game</span></div>
-                <div class="stat"><span class="stat-num">110+</span><span class="stat-label">unit tests</span></div>
+                <div class="stat"><span class="stat-num">120</span><span class="stat-label">unit tests</span></div>
             </div>
             <p>
                 Snake, Pong, Breakout and Space Invaders were each built in a sitting &mdash;
@@ -140,9 +140,28 @@ world.despawn_dead();  // one safe sweep</code></pre>
         </section>
 
         <section>
+            <h3>7. Events: detection tells, consumers decide</h3>
+            <p>
+                Some systems detect things; several others need to react. In Space Invaders
+                one bullet-hit means a score bump, a fleet speed-up, and two despawns &mdash;
+                and one day a sound effect. Instead of one function doing all of it, the
+                detector <em>emits</em> a typed event and any number of later systems read it.
+                Events live exactly one frame; the explicit system order above decides who
+                sees them:
+            </p>
+            <pre><code>// detection
+world.emit(BulletHit { bullet, invader });
+
+// any number of consumers, later in the list
+for hit in world.events::&lt;BulletHit&gt;() {
+    // score it, despawn it, play a sound...
+}</code></pre>
+        </section>
+
+        <section>
             <h3>The result</h3>
             <p>
-                The engine is ~340 lines. It doesn't try to be Bevy or Unity &mdash; it makes
+                The engine is ~400 lines. It doesn't try to be Bevy or Unity &mdash; it makes
                 exactly one promise: <em>a new game costs an afternoon, not a rewrite.</em>
                 Each of the games on the homepage is a single file you can read top to bottom,
                 and each one exercised the engine enough to grow it a little: Snake added

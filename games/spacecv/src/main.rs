@@ -595,6 +595,7 @@ async fn main() {
             right: is_key_down(KeyCode::Right) || is_key_down(KeyCode::D),
             screen_width: screen_width(),
             screen_height: screen_height(),
+            ..Default::default()
         };
 
         clear_background(BG_COLOR);

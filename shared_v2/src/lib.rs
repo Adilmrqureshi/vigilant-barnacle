@@ -1,4 +1,5 @@
 mod tests;
+pub mod ui;
 use std::{
     any::{Any, TypeId},
     collections::HashMap,
@@ -46,6 +47,86 @@ pub enum Tag {
     Ball,
     Brick,
     Bullet,
+    /// Experience pickup dropped by defeated enemies.
+    Xp,
+}
+
+/// Hit points. `hp` may go negative for a frame; systems that care should
+/// treat `hp <= 0.0` as dead and clear `alive`.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Health {
+    pub hp: f32,
+    pub max: f32,
+}
+
+impl Health {
+    pub fn new(max: f32) -> Self {
+        Self { hp: max, max }
+    }
+
+    pub fn fraction(&self) -> f32 {
+        if self.max <= 0.0 {
+            0.0
+        } else {
+            (self.hp / self.max).clamp(0.0, 1.0)
+        }
+    }
+
+    pub fn is_dead(&self) -> bool {
+        self.hp <= 0.0
+    }
+}
+
+/// Countdown that fires every `period` seconds. `tick` returns true on the
+/// frame it fires and re-arms itself, so callers never repeat the
+/// subtract-compare-reset dance.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Timer {
+    pub remaining: f32,
+    pub period: f32,
+}
+
+impl Timer {
+    pub fn new(period: f32) -> Self {
+        Self {
+            remaining: period,
+            period,
+        }
+    }
+
+    /// Like `new`, but fires on the very first tick.
+    pub fn ready(period: f32) -> Self {
+        Self {
+            remaining: 0.0,
+            period,
+        }
+    }
+
+    pub fn tick(&mut self, dt: f32) -> bool {
+        self.remaining -= dt;
+        if self.remaining <= 0.0 {
+            self.remaining += self.period;
+            if self.remaining <= 0.0 {
+                self.remaining = self.period;
+            }
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn reset(&mut self) {
+        self.remaining = self.period;
+    }
+
+    /// 0.0 just after firing, 1.0 just before the next fire.
+    pub fn fraction(&self) -> f32 {
+        if self.period <= 0.0 {
+            1.0
+        } else {
+            (1.0 - self.remaining / self.period).clamp(0.0, 1.0)
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -77,6 +158,9 @@ pub struct Entity {
     pub alive: bool,
 
     pub tag: Option<Tag>,
+    /// Game-defined sub-type within a tag (enemy variety, projectile owner,
+    /// pickup value...). The engine never interprets it.
+    pub kind: Option<usize>,
 
     pub render: Option<Render>,
     pub current_sprite: Option<usize>,
@@ -84,6 +168,7 @@ pub struct Entity {
 
     pub physics: Option<Physics>,
     pub attack: Option<Attack>,
+    pub health: Option<Health>,
 }
 
 pub struct World {
@@ -114,6 +199,15 @@ pub struct Input {
     pub down: bool,
     pub left: bool,
     pub right: bool,
+    // Mouse position in the same pixel space as screen_width/screen_height.
+    pub mouse_x: f32,
+    pub mouse_y: f32,
+    /// Left button went down this frame.
+    pub mouse_pressed: bool,
+    /// Left button currently held.
+    pub mouse_down: bool,
+    /// Right button went down this frame.
+    pub mouse_right_pressed: bool,
     pub screen_width: f32,
     pub screen_height: f32,
 }
@@ -127,6 +221,11 @@ impl Default for Input {
             up: false,
             down: false,
             left: false,
+            mouse_x: 0.0,
+            mouse_y: 0.0,
+            mouse_pressed: false,
+            mouse_down: false,
+            mouse_right_pressed: false,
             right: false,
             screen_width: 0.0,
             screen_height: 0.0,
@@ -190,7 +289,10 @@ impl World {
                 }
             });
         }
-        self.get_resource_mut::<Events<E>>().unwrap().queue.push(event);
+        self.get_resource_mut::<Events<E>>()
+            .unwrap()
+            .queue
+            .push(event);
     }
 
     pub fn events<E: 'static>(&self) -> &[E] {
@@ -297,12 +399,40 @@ impl Entity {
             transform: rect,
             alive: true,
             tag: None,
+            kind: None,
             render: None,
             current_sprite: None,
             original_sprite: None,
             physics: None,
             attack: None,
+            health: None,
         }
+    }
+
+    pub fn with_kind(mut self, kind: usize) -> Self {
+        self.kind = Some(kind);
+        self
+    }
+
+    pub fn with_health(mut self, max: f32) -> Self {
+        self.health = Some(Health::new(max));
+        self
+    }
+
+    /// Physics component with the given starting velocity.
+    pub fn with_velocity(mut self, x: f32, y: f32) -> Self {
+        self.physics = Some(Physics {
+            is_grounded: false,
+            velocity: Velocity { x, y },
+        });
+        self
+    }
+
+    pub fn center(&self) -> (f32, f32) {
+        (
+            self.transform.x + self.transform.w / 2.0,
+            self.transform.y + self.transform.h / 2.0,
+        )
     }
 
     pub fn with_attack(mut self, animation: usize) -> Self {

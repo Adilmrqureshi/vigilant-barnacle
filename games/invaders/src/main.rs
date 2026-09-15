@@ -316,31 +316,15 @@ fn ui_system(world: &World, state: &GameState) {
 
     draw_text(&format!("SCORE {}", state.score as i32), ox, oy - 14.0, 32.0, WHITE);
 
-    let help = "LEFT/RIGHT or A/D: move - SPACE: shoot - clear the fleet";
-    let dims = measure_text(help, None, 20, 1.0);
-    draw_text(help, ox + (BOARD_W - dims.width) / 2.0, oy + BOARD_H + 26.0, 20.0, GRAY);
+    ui::draw_help_line(
+        "LEFT/RIGHT or A/D: move - SPACE: shoot - clear the fleet",
+        Rect::new(ox, oy, BOARD_W, BOARD_H),
+    );
 
     if state.game_over {
         let won = world.get_resource::<Fleet>().is_some_and(|f| f.won);
         let text = if won { "YOU WIN!" } else { "GAME OVER!" };
-        let dims = measure_text(text, None, 50, 1.0);
-        draw_text(
-            text,
-            screen_width() / 2.0 - dims.width / 2.0,
-            screen_height() / 2.0 - dims.height / 2.0,
-            60.0,
-            if won { GREEN } else { RED },
-        );
-
-        let hint = "press SPACE to restart";
-        let hint_dims = measure_text(hint, None, 30, 1.0);
-        draw_text(
-            hint,
-            screen_width() / 2.0 - hint_dims.width / 2.0,
-            screen_height() / 2.0 + 40.0,
-            30.0,
-            WHITE,
-        );
+        ui::draw_game_over_overlay(text, if won { GREEN } else { RED });
     }
 }
 
@@ -409,13 +393,11 @@ async fn main() {
         let input = Input {
             dt: get_frame_time(),
             spacebar: is_key_pressed(KeyCode::Space),
-            a: false,
-            up: false,
-            down: false,
             left: is_key_down(KeyCode::Left) || is_key_down(KeyCode::A),
             right: is_key_down(KeyCode::Right) || is_key_down(KeyCode::D),
             screen_width: screen_width(),
             screen_height: screen_height(),
+            ..Default::default()
         };
 
         clear_background(BG_COLOR);

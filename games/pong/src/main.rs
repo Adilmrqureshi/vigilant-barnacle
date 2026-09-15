@@ -267,9 +267,10 @@ fn ui_system(world: &World, state: &GameState) {
         CPU_COLOR,
     );
 
-    let help = "UP/DOWN or W/S: move your paddle - first to 7 wins";
-    let dims = measure_text(help, None, 20, 1.0);
-    draw_text(help, ox + (COURT_W - dims.width) / 2.0, oy + COURT_H + 26.0, 20.0, GRAY);
+    ui::draw_help_line(
+        "UP/DOWN or W/S: move your paddle - first to 7 wins",
+        Rect::new(ox, oy, COURT_W, COURT_H),
+    );
 
     if state.game_over {
         let text = if scores.player > scores.cpu {
@@ -277,24 +278,7 @@ fn ui_system(world: &World, state: &GameState) {
         } else {
             "CPU WINS!"
         };
-        let dims = measure_text(text, None, 50, 1.0);
-        draw_text(
-            text,
-            screen_width() / 2.0 - dims.width / 2.0,
-            screen_height() / 2.0 - dims.height / 2.0,
-            60.0,
-            WHITE,
-        );
-
-        let hint = "press SPACE to restart";
-        let hint_dims = measure_text(hint, None, 30, 1.0);
-        draw_text(
-            hint,
-            screen_width() / 2.0 - hint_dims.width / 2.0,
-            screen_height() / 2.0 + 40.0,
-            30.0,
-            WHITE,
-        );
+        ui::draw_game_over_overlay(text, WHITE);
     }
 }
 
@@ -363,13 +347,11 @@ async fn main() {
         let input = Input {
             dt: get_frame_time(),
             spacebar: is_key_pressed(KeyCode::Space),
-            a: false,
             up: is_key_down(KeyCode::Up) || is_key_down(KeyCode::W),
             down: is_key_down(KeyCode::Down) || is_key_down(KeyCode::S),
-            left: false,
-            right: false,
             screen_width: screen_width(),
             screen_height: screen_height(),
+            ..Default::default()
         };
 
         clear_background(BG_COLOR);

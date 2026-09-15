@@ -142,13 +142,8 @@ fn ui_system(_world: &World, state: &GameState) {
     draw_text(help, screen_width() - help_dims.width - 16.0, 30.0, 24.0, BLACK);
 
     if state.game_over {
-        let text = "GAME OVER!";
-        let text_dimensions = measure_text(text, None, 50, 1.0);
-        let pos = Transform {
-            x: screen_width() / 2.0 - text_dimensions.width / 2.0,
-            y: screen_height() / 2.0 - text_dimensions.height / 2.0,
-        };
-        draw_text(text, pos.x, pos.y, 60.0, RED);
+        // No restart hint here: the fullscreen scene has its own help text top-right.
+        ui::draw_game_over_title("GAME OVER!", 60, RED);
     }
 }
 

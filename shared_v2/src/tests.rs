@@ -286,4 +286,60 @@ mod tests {
         // (0 + 1) * 2 = 2
         assert_eq!(game.state.score, 2.0);
     }
+
+    // -----------------------------
+    // Health, kind, velocity, Timer
+    // -----------------------------
+
+    #[test]
+    fn health_kind_and_velocity_builders() {
+        let e = make_entity(Tag::Enemy)
+            .with_kind(3)
+            .with_health(40.0)
+            .with_velocity(2.0, -1.0);
+        assert_eq!(e.kind, Some(3));
+        let h = e.health.unwrap();
+        assert_eq!(h.hp, 40.0);
+        assert_eq!(h.max, 40.0);
+        assert!(!h.is_dead());
+        let v = &e.physics.as_ref().unwrap().velocity;
+        assert_eq!((v.x, v.y), (2.0, -1.0));
+        assert_eq!(e.center(), (5.0, 5.0));
+    }
+
+    #[test]
+    fn health_fraction_clamps_and_reports_death() {
+        let mut h = Health::new(50.0);
+        h.hp = 25.0;
+        assert_eq!(h.fraction(), 0.5);
+        h.hp = -10.0;
+        assert_eq!(h.fraction(), 0.0);
+        assert!(h.is_dead());
+    }
+
+    #[test]
+    fn timer_fires_on_period_and_rearms() {
+        let mut t = Timer::new(1.0);
+        assert!(!t.tick(0.6));
+        assert!(t.tick(0.6));
+        // Carries the overshoot into the next period.
+        assert!((t.remaining - 0.8).abs() < 1e-5);
+        assert!(!t.tick(0.5));
+        assert!(t.tick(0.5));
+    }
+
+    #[test]
+    fn ready_timer_fires_on_first_tick() {
+        let mut t = Timer::ready(2.0);
+        assert!(t.tick(0.016));
+        assert!(!t.tick(0.016));
+        assert!(t.fraction() > 0.0 && t.fraction() < 0.1);
+    }
+
+    #[test]
+    fn timer_huge_step_does_not_stay_negative() {
+        let mut t = Timer::new(1.0);
+        assert!(t.tick(10.0));
+        assert_eq!(t.remaining, 1.0);
+    }
 }

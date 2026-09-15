@@ -223,29 +223,16 @@ fn ui_system(world: &World, state: &GameState) {
         }
     }
 
-    let help = "UP: thrust - LEFT/RIGHT: steer - land softly on the green pad";
-    let dims = measure_text(help, None, 20, 1.0);
-    draw_text(help, ox + (BOARD_W - dims.width) / 2.0, oy + BOARD_H + 26.0, 20.0, GRAY);
+    ui::draw_help_line(
+        "UP: thrust - LEFT/RIGHT: steer - land softly on the green pad",
+        Rect::new(ox, oy, BOARD_W, BOARD_H),
+    );
 
     if state.game_over {
+        // Long title, so smaller than the standard 60pt overlay.
         let text = if lander.won { "THE EAGLE HAS LANDED!" } else { "CRASHED!" };
-        let dims = measure_text(text, None, 44, 1.0);
-        draw_text(
-            text,
-            screen_width() / 2.0 - dims.width / 2.0,
-            screen_height() / 2.0 - dims.height / 2.0,
-            44.0,
-            if lander.won { GREEN } else { RED },
-        );
-        let hint = "press SPACE to fly again";
-        let hint_dims = measure_text(hint, None, 30, 1.0);
-        draw_text(
-            hint,
-            screen_width() / 2.0 - hint_dims.width / 2.0,
-            screen_height() / 2.0 + 40.0,
-            30.0,
-            WHITE,
-        );
+        ui::draw_game_over_title(text, 44, if lander.won { GREEN } else { RED });
+        ui::draw_restart_hint("press SPACE to fly again");
     }
 }
 
@@ -288,13 +275,12 @@ async fn main() {
         let input = Input {
             dt: get_frame_time(),
             spacebar: is_key_pressed(KeyCode::Space),
-            a: false,
             up: is_key_down(KeyCode::Up) || is_key_down(KeyCode::W),
-            down: false,
             left: is_key_down(KeyCode::Left) || is_key_down(KeyCode::A),
             right: is_key_down(KeyCode::Right) || is_key_down(KeyCode::D),
             screen_width: screen_width(),
             screen_height: screen_height(),
+            ..Default::default()
         };
 
         clear_background(BG_COLOR);
